@@ -203,6 +203,8 @@ def handle_component_relay(communicate, connected_relay_username):
 
 # Fungsionalitas untuk melakukan koneksi ke relay yang sudah ada di dalam sistem
 def connect_to_another_relay(ip, port, uname):
+    print("Melakukan koneksi dengan relay lainnya")
+    print(f"IP {ip}; PORT {port}")
     connection_with_another_relay = SocketClient(ip, port, relay=True, tipe="Relay")
     # cwar = Client With Another Relay
     cwar = connection_with_another_relay.socket
@@ -238,6 +240,7 @@ def config_starter_relay(m): # m = message_from_manager
     my_username = m.get("username")
     connections = m.get("components") # Components Relay yang diberikan Manager
     for c in connections:
+        print("Masuk for")
         ip = c.get("ip_local")
         port = c.get("port")
         # Mengecek agar tidak terkoneksi ke diri sendiri
