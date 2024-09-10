@@ -30,7 +30,7 @@ def get_relay_with_less_connection_db():
     return res
 
 def convert_components_db(com):
-    print("Converr in COMPONENT DB")
+    print("Convert in COMPONENT DB")
     res = []
     for c in com:
         res.append({
@@ -40,7 +40,7 @@ def convert_components_db(com):
             'type': c[3],
             'connection': c[4],
         })
-    print(f"Result")
+    print(f"Result {res}")
     return res
 
 def update_total_connection(id, get_timestamp, tipe=None):
