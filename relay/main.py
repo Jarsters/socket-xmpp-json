@@ -258,6 +258,7 @@ while not s2:
             target = m
             break
     if(target):
+        print(target)
         ip = target.get("ip_local")
         port = target.get("port")
         s2 = SocketClient(ip, port, tipe="Manager")

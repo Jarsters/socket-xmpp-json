@@ -32,7 +32,7 @@ def formatting_components(data):
     res = []
     for d in data:
         res.append({
-            'ip_address': d[0],
+            'ip_local': d[0],
             'port': d[1],
             'type': d[2],
             'is_private': d[3],
