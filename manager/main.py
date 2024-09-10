@@ -364,6 +364,7 @@ while True:
                     "username": username_relay
                 }
                 # Mengirimkan semua data komponen kepada relay yang baru terkoneksi
+                print(f"KONFIGURASI RELAY {objek}")
                 send_message(connection, objek)
             # Mendapatkan tipe dari komponen yang terhubung
             tipe = message.get('type')
