@@ -17,7 +17,6 @@ class SQL():
     # Helper
     def open_connection(self):
         connection = sqlite3.connect(self.db_name)
-        # connection = sqlite3.connect(":memory:")
         cursor = connection.cursor()
         return connection, cursor
     
@@ -118,12 +117,24 @@ class SQL():
         self.close_connection(connection)
         return res
     
+    # def get_one(self, column_condition=None, tuple_condition=None, boolean_condition=None):
+    #     connection, cursor = self.open_connection()
+    #     cmd = f"SELECT * FROM {self.table_name}"
+    #     if(tuple_condition):
+    #         cmd += f" WHERE {self.helper_set_condition(column_condition, boolean_condition)}"
+    #         res = cursor.execute(cmd, tuple_condition)
+    #     else:    
+    #         res = cursor.execute(cmd)
+    #     res = res.fetchone()
+    #     self.close_connection(connection)
+    #     return res
+    
     def get_all_with_limit(self, limit=1, column_condition=None, tuple_condition=None, boolean_condition=None):
         connection, cursor = self.open_connection()
         cmd = f"SELECT * FROM {self.table_name}"
         if(tuple_condition):
             cmd += f" WHERE {self.helper_set_condition(column_condition, boolean_condition)}"
-            # print(f"CMD: {cmd}, {tuple_condition}")
+            print(f"CMD: {cmd}, {tuple_condition}")
             res = cursor.execute(cmd, tuple_condition)
         else:    
             res = cursor.execute(cmd)
@@ -167,7 +178,7 @@ class SQL():
         cmd = f"DELETE FROM {self.table_name}"
         if(tuple_condition):
             cmd += f" WHERE {self.helper_set_condition(column_condition, boolean_condition)}"
-            # print(cmd, tuple_condition)
+            print(cmd, tuple_condition)
             res = cursor.execute(cmd, tuple_condition)
         else:    
             res = cursor.execute(cmd)

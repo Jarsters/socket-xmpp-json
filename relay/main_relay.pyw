@@ -6,7 +6,7 @@ import threading
 
 from utils.message import send_message_to_target, send_packet_error
 from utils.packet import get_message, get_message_manager, get_message_relay, get_message_tracker, get_message_user, send_message
-from database.dummy import my_username, connection_relay, user_in_another_relay, relay_to_tracker\
+from database.init_data import my_username, connection_relay, user_in_another_relay, relay_to_tracker\
                             , my_ip, r, relay, s2, relay_to_manager, connections
 
 class SocketClient:
@@ -330,6 +330,7 @@ while True:
         elif(message.get("msg") == "Hello relay!"):
             objek = {"msg": "Hallo target"}
             send_message(connection, objek)
+    print(f"CONNECTION RELAY: {connection_relay}")
         
 
     

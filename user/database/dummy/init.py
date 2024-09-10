@@ -44,4 +44,4 @@ def user_presence_unavailable(item):
     print(item)
     print(users)
     if(users.get(item.get('from'))):
-        users[item.get('from')]['online'] = False
+        users[item.get('from')]['online'] = 0

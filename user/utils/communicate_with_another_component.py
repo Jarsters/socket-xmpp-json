@@ -3,11 +3,16 @@ from utils.packet import get_message_manager, get_message_relay
 import json
 
 def handle_message_from_relay(communicate):
-    while True:
+    error = False
+    while not error:
         try:
             messages = get_message_relay(communicate)
             for message in messages:
                 message = json.loads(message)
+                if(message.get("error_msg")):
+                    error = True
+                    print("Komponen relay mengalami error....")
+                    break
                 initiator = message.get("from")
                 msg = message.get("body")
                 print(f"\n\t{initiator}: {msg}")
@@ -21,13 +26,18 @@ def handle_message_from_relay(communicate):
             break
 
 def handle_message_from_manager(communicate):
-    while True:
+    error = False
+    while not error:
         try:
             messages = get_message_manager(communicate)
             for message in messages:
                 message = json.loads(message)
                 # print(message)
-                if(message.get("type") == "result" and message.get("stanza") == "iq" and message.get("namespace") == "roster" and message.get("query") and message.get("query").get("items")):
+                if(message.get("error_msg")):
+                    error = True
+                    print("Komponen manager mengalami error....")
+                    break
+                elif(message.get("type") == "result" and message.get("stanza") == "iq" and message.get("namespace") == "roster" and message.get("query") and message.get("query").get("items")):
                     # print("masuk items")
                     items = message.get("query").get("items")
                     save_to_my_rosters(items)

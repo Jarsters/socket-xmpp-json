@@ -1,65 +1,8 @@
-'''
-FORMAT PRESENCE
-{
-    stanza: 'presence',
-    from: init_entity_presence,
-    to: receive_entity_presence,
-    type: None or unavaiable
-}
-'''
-
-'''
-if(not message.get('type') and not message.get("bio")):
-    init_presence(rosters, users, socket_user, username)
-elif(message.get('bio')):
-    set_my_bio(rosters, users, socket_user, username, message)
-elif(message.get('to')):
-    jid_target = message.get('to')
-    # Kirim status presence init_entity ke target_entity
-    init_entity_presence = get_presence_by_jid(username, users)
-    send_presence_to_someone(jid_target, socket_user, init_entity_presence)
-    # Ambil status dari target_entity dan kirim ke init_entity
-    target_entity_presence = get_presence_by_jid(jid_target, users)
-    send_presence_to_someone(username, socket_user, target_entity_presence)
-elif(message.get('type') == 'unavailable'):
-    logout(rosters, users, socket_user, username)
-    break
-====
-    INI DILAKUIN PAS BARU LOGIN & SETELAH MINTA ROSTER
-{
-	'stanza': 'presence'
-}
-===
-{
-	'stanza': 'presence',
-	'from': init_entity,
-	'bio': 'halo ini bio aku'
-}
-===
-{
-	'stanza': 'presence',
-	'from': init_entity,
-	'to': jid_target
-}
-===
-{
-	'stanza': presence,
-    'from': init_entity,
-	'type': 'unavailable'
-}
-'''
-
-
-
-'''
-DAFTAR FUNGSI YANG AKAN DIIMPLEMENTASIKAN
-    1. MELIHAT STATUS ONLINE BERDASARKAN USERNAME. (DIAMBIL DARI TABLE USERS) -> DUMMY DB
-    2. MENGUBAH BIO/STATUS.
-    3. MENGUBAH STATUS DARI ONLINE KE OFFLINE.
-'''
-
+from database.sqlite.roster import get_rosters_user
 from utils.packet import send_message
 from utils.get_time import get_timestamp
+
+from database.sqlite.user import get_presence_user, update_bio, update_status_online
 
 def helper_error(msg, error_type, stanza_error):
     '''
@@ -80,17 +23,10 @@ def helper_error(msg, error_type, stanza_error):
     msg["error"]["stanza_error_ns"] = "xmpp-stanzas"
     return msg
 
-def send_to_roster_subscription_from(roster, socket_user, objek_presence, users, init=True):
-    '''
-    objek_presence = {
-        "from": init_entity_jid,
-        "type": THE TYPE
-    }
-    tinggal tambahin "to" dan kirim ke subscriptionnya "to"
-    '''
-    # print('90909009')
-    # print(roster)
-    for r in roster.values():
+# Fungsionalitas mengirimkan packet untuk rostem item dari user yang memiliki subscription 'from' atau 'both'
+def send_to_roster_subscription_from(roster, socket_user, objek_presence, init=True):
+    print(f"ROSTER FROM AND BOTH IN DB: {roster}")
+    for r in roster:
         if(r.get("subscription") == "from"):
             objek_presence["to"] = r.get("jid")
             try:
@@ -102,45 +38,46 @@ def send_to_roster_subscription_from(roster, socket_user, objek_presence, users,
             try:
                 send_message(socket_user[r.get('jid')], objek_presence)
                 if(init):
-                    print('INIT MASUK KE SINI')
-                    presence_target = get_presence_by_jid(r.get('jid'), users)
+                    presence_target = get_presence_by_jid(r.get('jid'))
                     send_presence_to_someone(objek_presence.get('from'), socket_user, presence_target)
             except Exception as e:
+                print(e)
                 continue
 
-def get_presence_entity_subscription_to(roster, socket_user, username, users):
+# Fungsionalitas mengirimkan packet untuk rostem item dari user yang memiliki subscription 'to' atau 'both'
+def get_presence_entity_subscription_to(roster, socket_user, username):
+    print(f"ROSTER TO AND BOTH IN DB: {roster}")
     socket = socket_user[username]
-    for r in roster.values():
+    for r in roster:
         if(r.get("subscription") == "to" or r.get("subscription") == "both"):
-            objek_presence = get_presence_by_jid(r.get('jid'), users)
+            objek_presence = get_presence_by_jid(r.get('jid'))
             try:
                 send_message(socket, objek_presence)
             except Exception as e:
+                print(e)
                 continue
 
+# Fungsionalitas untuk mengirimkan presence kepada user target
 def send_presence_to_someone(jid_target, socket_user, objek_presence):
     objek_presence["to"] = jid_target
-    print(objek_presence)
+    # print(objek_presence)
     send_message(socket_user[jid_target], objek_presence)
 
 # ========== CRUD ada dibawah ini
 
-def init_presence(rosters, users, socket_user, username):
-    users[username]['online'] = True
-    users[username]['updated_at'] = get_timestamp()
-    roster = rosters.get(username)
-    print(roster)
-    print(username)
-    if(not roster):
-        return
-    # objek_presence = {
-    #     "from": username,
-    # }
-    objek_presence = get_presence_by_jid(username, users)
-    send_to_roster_subscription_from(roster, socket_user, objek_presence, users)
-    get_presence_entity_subscription_to(roster, socket_user, username, users)
+# Fungsionalitas untuk mengelola initial presence dari user
+def init_presence(socket_user, username):
+    update_status_online(['online', 'updated_at'], (1, get_timestamp(),), ['user_id'], (username,))
+    roster_db_from = get_rosters_user(username, ("from", "both",))
+    roster_db_to = get_rosters_user(username, ("to", "both",))
+    objek_presence = get_presence_by_jid(username)
+    if(roster_db_from):
+        send_to_roster_subscription_from(roster_db_from, socket_user, objek_presence)
+    if(roster_db_from):
+        get_presence_entity_subscription_to(roster_db_to, socket_user, username)
 
-def get_presence_by_jid(jid_target, users):
+# Fungsionalitas untuk mendapatkan presence dari jid yang diinginkan
+def get_presence_by_jid(jid_target):
     '''
     result tmp
     {
@@ -152,41 +89,31 @@ def get_presence_by_jid(jid_target, users):
         "updated_at": timestamp,
     }
     '''
-    if(not users.get(jid_target)):
-        return False
-    print("INI DISINI")
-    tmp = users[jid_target].copy()
-    del tmp["password"]
-    del tmp["created_at"]
-    tmp['stanza'] = 'presence'
-    tmp['from'] = jid_target
-    print(tmp)
-    return tmp
+    return get_presence_user(jid_target)
 
-def set_my_bio(rosters, users, socket_user, username, msg):
+# Fungsionalitas untuk mengelola permintaan user mengubah bio
+def set_my_bio(socket_user, username, msg):
     if (type(msg) != dict):
         return helper_error(msg, "modify", "bad-request")
     elif(username != msg.get("from")):
         return helper_error(msg, "auth", "forbidden")
     updated_at = get_timestamp()
-    users[username]['bio'] = msg.get('bio')
-    users[username]['updated_at'] = updated_at
-    my_presence = get_presence_by_jid(username, users)
-    roster = rosters.get(username)
-    print(roster)
-    if(not roster):
+    update_bio(['bio', 'updated_at'], (msg.get('bio'), updated_at,), ['user_id'], (username,))
+    my_presence = get_presence_by_jid(username)
+    roster_db_from = get_rosters_user(username, ("from", "both",))
+    if(not roster_db_from):
         return
-    send_to_roster_subscription_from(roster, socket_user, my_presence, users, False)
+    send_to_roster_subscription_from(roster_db_from, socket_user, my_presence, False)
 
-def logout(rosters, users, socket_user, username):
-    users[username]['online'] = False
-    users[username]['updated_at'] = get_timestamp()
-    roster = rosters.get(username)
-    if(not roster):
+# Fungsionalitas untuk mengelola permintaan user presence bertipe 'unavailable' atau logout
+def logout(socket_user, username):
+    update_status_online(['online', 'updated_at'], (0, get_timestamp(),), ['user_id'], (username,))
+    roster_db_from = get_rosters_user(username, ("from", "both",))
+    if(not roster_db_from):
         return
     objek_presence = {
         "stanza": "presence",
         "from": username,
         "type": "unavailable"
     }
-    send_to_roster_subscription_from(roster, socket_user, objek_presence, users)
+    send_to_roster_subscription_from(roster_db_from, socket_user, objek_presence)

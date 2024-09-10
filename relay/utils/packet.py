@@ -19,15 +19,18 @@ def get_message_manager(communicate):
     message = communicate.recv(65536)
     message = message.decode()
     items = message.split('\x80\x81\x82')
-    for i in items:
-        if(msg_manager):
-            i = msg_manager + i
-            msg_manager = ""
-            yield i
-        elif(verify(i)):
+    if(len(items) == 1 and not items[0]):
+        yield '{"error_msg": true, "tipe": "socket peer is closed"}'
+    else:
+        for i in items:
+            if(msg_manager):
+                i = msg_manager + i
+                msg_manager = ""
                 yield i
-        else:
-            msg_manager = i
+            elif(verify(i)):
+                    yield i
+            else:
+                msg_manager = i
 
 def get_message_user(communicate):
     global msg_user
@@ -35,15 +38,18 @@ def get_message_user(communicate):
     message = communicate.recv(65536)
     message = message.decode()
     items = message.split('\x80\x81\x82')
-    for i in items:
-        if(msg_user):
-            i = msg_user + i
-            msg_user = ""
-            yield i
-        elif(verify(i)):
+    if(len(items) == 1 and not items[0]):
+        yield '{"error_msg": true, "tipe": "socket peer is closed"}'
+    else:
+        for i in items:
+            if(msg_user):
+                i = msg_user + i
+                msg_user = ""
                 yield i
-        else:
-            msg_user = i
+            elif(verify(i)):
+                    yield i
+            else:
+                msg_user = i
 
 def get_message_tracker(communicate):
     message = None
@@ -68,17 +74,20 @@ def get_message_relay(communicate):
         message = communicate.recv(65536)
         message = message.decode()
         items = message.split('\x80\x81\x82')
+        if(len(items) == 1 and not items[0]):
+            yield '{"error_msg": true, "tipe": "socket peer is closed"}'
+        else:
+            for i in items:
+                if(msg_relay):
+                    i = msg_relay + i
+                    msg_relay = ""
+                    yield i
+                elif(verify(i)):
+                        yield i
+                else:
+                    msg_relay = i
     except WindowsError as e:
          items = ['{"error_msg": true, "tipe": "winerror"}']
-    for i in items:
-        if(msg_relay):
-            i = msg_relay + i
-            msg_relay = ""
-            yield i
-        elif(verify(i)):
-                yield i
-        else:
-            msg_relay = i
 
 def get_message(communicate):
     global msg

@@ -1,25 +1,6 @@
-'''
-TIDAK MENGIMPLEMENTASIKAN ROSTER PUSH, KARENA HANYA AKAN ADA 1 RESOURCE.
-'''
-
-
-'''
-FORMAT ROSTER REQUEST
-{
-    stanza: "iq",
-    namespace: "roster",
-    from: initial_entity,
-    type: "get/set",
-    subscription: "remove" # untuk delete roster,
-    query: {
-                item: {
-                    jid: ,
-                    name: ,
-                    subscription: to/from/both
-                }
-            }
-}
-'''
+from database.sqlite.roster import delete_roster_user, get_roster_user, rosters as r_db, get_rosters_user, save_rosters, update_subscription
+from database.sqlite.user import get_user_by_username
+from utils.get_time import get_timestamp
 
 def helper_parse_from_req_to_res(msg):
     msg["type"] = "result"
@@ -42,64 +23,67 @@ def helper_error(msg, error_type, stanza_error):
     msg["error"]["stanza_error_ns"] = "xmpp-stanzas"
     return msg
 
-def helper_set_rosters(rosters, username_target, item):
-    if(not rosters.get(username_target)):
-        rosters[username_target] = {}
-    rosters[username_target][item["jid"]] = item
+# Fungsionalitas membantu menyimpan atau mengubah roster item dalam user's roster
+def helper_set_rosters(username_target, item, updating=False):
+    if(updating):
+        print(f"DATA IN UPDATING: {username_target}, {item}")
+        data_set_tuple = (item.get("name"), item.get("subscription"))
+        data_condition_tuple = (username_target, item.get("jid"))
+        update_subscription(data_set_tuple, data_condition_tuple)
+    else:
+        print(f"HST: {username_target}, {item}")
+        item_roster = (username_target,) + tuple(item.values())
+        save_rosters(list(item_roster), get_timestamp())
+    print(f"ROSTER IN DB: {r_db.get_all()}")
 
-def helper_check_and_get_roster(rosters, username, target_jid):
-    if(not rosters.get(username)):
-        return None
-    if(rosters.get(username).get(target_jid)):
-        return rosters.get(username).get(target_jid)
-    return None
+# def helper_check_and_get_roster(rosters, username, target_jid):
+def helper_check_and_get_roster(username, target_jid):
+    print(f"GRU DB: {get_roster_user(username, target_jid)}")
+    return get_roster_user(username, target_jid)
 
-def set_to_rosters(rosters, username, item):
+# Fungsionalitas untuk membantu menambahkan atau mengubah roster item
+def set_to_rosters(username, item):
     jid_target = item["jid"]
+    updating = False
     # Mengecek apakah init_user sudah masuk ke roster_target
-    tmp_item_jid = helper_check_and_get_roster(rosters, jid_target, username)
-    # print(f"TIJ 1: {tmp_item_jid}")
-    # print(f"ITEM 1: {item}")
+    tmp_item_jid = helper_check_and_get_roster(jid_target, username)
+    # Logic komponen manager untuk menentukan apakah roster item akan ditambahkan atau diperbarui saja
     if(not tmp_item_jid):
         tmp_item_jid = {"jid": username, "subscription": None}
-    if(not rosters.get(username)):
-        rosters[username] = {}
-        # Untuk set si init_entity sebagai rosternya contact
-        tmp_item_jid["subscription"] = "from"
-    elif(not rosters.get(username).get(jid_target)):
+    else:
+        print("We will updating")
+        updating = True
+    # Menentuka tipe subscription yang akan ditetapkan berdasarkan logic kepintaran pembeda
+    if(not tmp_item_jid.get("subscription")):
         tmp_item_jid["subscription"] = "from"
     elif(tmp_item_jid.get("subscription") == "to"):
+        updating = True
         item["subscription"] = "both"
         tmp_item_jid["subscription"] = "both"
-    print(item)
-    print(tmp_item_jid)
-    helper_set_rosters(rosters, username, item)
-    helper_set_rosters(rosters, jid_target, tmp_item_jid)
+    # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari user's roster
+    helper_set_rosters(username, item, updating)
+    # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari roster item's roster dengan roster itemnya adalah user pengirim
+    helper_set_rosters(jid_target, tmp_item_jid, updating)
 
-def delete_from_rosters(rosters, username, item):
+# Fungsionalitas untuk menghapus roster item dari user's roster
+def delete_from_rosters(username, item):
     jid_target = item["jid"]
-    # Mengecek apakah init_user sudah masuk ke roster_target
-    tmp_item_jid = helper_check_and_get_roster(rosters, jid_target, username)
-    init_entity_roster = rosters.get(username).get(jid_target)
-    # print(f"TIJ 1: {tmp_item_jid}")
-    # print(f"INIT_ENTITY_ITEM 1: {init_entity_roster}")
+    # Mengecek apakah user pengirim sudah masuk ke roster item's roster
+    tmp_item_jid = helper_check_and_get_roster(jid_target, username)
+    init_entity_roster = get_roster_user(username, jid_target)
 
     # Jika both, init_entity => "from", target_entity => "to"
     # Jika to, init_entity => None, target_entity => None
-
     if(init_entity_roster.get("subscription") == "both"):
         tmp_item_jid["subscription"] = "to"
         init_entity_roster["subscription"] = "from"
-        helper_set_rosters(rosters, username, init_entity_roster)
-        helper_set_rosters(rosters, jid_target, tmp_item_jid)
+        helper_set_rosters(username, init_entity_roster, True)
+        helper_set_rosters(jid_target, tmp_item_jid, True)
     elif(init_entity_roster.get("subscription") == "to"):
-        print("Masuk sini")
-        del rosters[username][jid_target]
-        del rosters[jid_target][username]
-    print(init_entity_roster)
-    print(tmp_item_jid)
-    print(rosters)
+        delete_roster_user(username, jid_target)
+        delete_roster_user(jid_target, username)
 
+# Fungsionalitas membuat packet presence subscribed
 def get_packet_subscribed_for_init_entity(init_entity, target_entity):
     '''
     {
@@ -116,7 +100,8 @@ def get_packet_subscribed_for_init_entity(init_entity, target_entity):
         'type': 'subscribed'
     }
     return objek
-    
+
+# Fungsionalitas membuat packet presence unsubscribed
 def get_packet_unsubscribed_for_init_entity(init_entity, target_entity):
     '''
     {
@@ -134,11 +119,11 @@ def get_packet_unsubscribed_for_init_entity(init_entity, target_entity):
     }
     return objek
 
-# Yang diatas ini fungsi CRUD-nya
-
+# Yang diatas ini fungsionalitas helper
 
 # CRUD yang dipanggil keluar ada di bawah ini
-def get_roster(username, table_roster, msg):
+# Fungsionalitas untuk mendapatkan roster dari user
+def get_rosters(username, msg):
     '''
         AMBIL YANG SUBSCRIPTIONNYA TO ATAU BOTH
     '''
@@ -146,56 +131,17 @@ def get_roster(username, table_roster, msg):
         return helper_error(msg, "modify", "bad-request")
     elif(msg.get("from") != username):
         return helper_error(msg, "auth", "forbidden")
-
-    # ====== INI PAKE DATABASE DUMMY ======
-    rosters = table_roster.get(username)
-    roster = [] # Ini nanti ganti jadi table di db
-    if(rosters):
-        for value in rosters.values():
-            if(value.get("subscription") == 'to' or value.get("subscription") == "both"):
-                roster.append(value)
-
-    # ===== NANTI DATABASE ASLI DIBAWAH SINI ======
-    # logic in here
+    
+    # Meminta data roster dari database, dengan tipe subscription 'to' atau 'both'
+    roster = get_rosters_user(username, ('to', 'both'))
 
     msg = helper_parse_from_req_to_res(msg)
     msg["query"]["items"] = roster
-
     return msg
 
-def set_roster(username, table_roster, msg, users):
-    if (type(msg) != dict):
-        return helper_error(msg, "modify", "bad-request")
-    elif(username != msg.get("from")):
-        return helper_error(msg, "auth", "forbidden")
-    elif(not users.get(msg.get("query").get("item").get("jid"))):
-        return helper_error(msg, "modify", "bad-request")
-    
-    try:
-        query = msg.get("query")
-        item = query.get("item")
-        jid = item.get("jid")
-    except AttributeError as e:
-        print(e)
-        return helper_error(msg, "modify", "bad-request")
-
-    if(query and item and jid and users.get(jid)):
-        # ==== ini set roster masih ke data dummy
-        set_to_rosters(table_roster, username, item)
-
-        del msg["query"]
-        return helper_parse_from_req_to_res(msg)
-    else:
-        return helper_error(msg, "modify", "bad-request")
-
-def delete_roster(username, table_roster, msg, users):
-    if (type(msg) != dict):
-        return helper_error(msg, "modify", "bad-request")
-    elif(username != msg.get("from")):
-        return helper_error(msg, "auth", "forbidden")
-    elif(not users.get(msg.get("query").get("item").get("jid"))):
-        return helper_error(msg, "modify", "bad-request")
-    
+# Fungsional menambahkan atau mengubah roster item
+def set_roster(username, msg):
+    # Validitas data yang dimasukkan oleh user
     try:
         query = msg.get("query")
         item = query.get("item")
@@ -204,16 +150,42 @@ def delete_roster(username, table_roster, msg, users):
         print(e)
         return helper_error(msg, "modify", "bad-request")
     
-    # if(not table_roster.get(username)):
-    #     return helper_error(msg, "modify", "bad-request")
-    if(not helper_check_and_get_roster(table_roster, item["jid"], username)):
+    if (type(msg) != dict):
+        return helper_error(msg, "modify", "bad-request")
+    elif(username != msg.get("from")):
+        return helper_error(msg, "auth", "forbidden")
+    elif(not get_user_by_username(jid)):
+        return helper_error(msg, "modify", "bad-request")
+    # Data yang diberikan valid
+    else:
+        # Memanggil fungsionalitas helper untuk menambahkan atau mengubah roster item
+        set_to_rosters(username, item)
+        del msg["query"]
+        # Memberikan feedback bahwa permintaan menambahkan atua mengubah roster item berhasil dilakukan
+        return helper_parse_from_req_to_res(msg)
+
+# Fungsionalitas untuk menghapus roster item dari user's roster
+def delete_roster(username, msg):
+    try:
+        query = msg.get("query")
+        item = query.get("item")
+        jid = item.get("jid")
+    except AttributeError as e:
+        print(e)
+        return helper_error(msg, "modify", "bad-request")
+
+    if (type(msg) != dict):
+        return helper_error(msg, "modify", "bad-request")
+    elif(username != msg.get("from")):
+        return helper_error(msg, "auth", "forbidden")
+    elif(not get_user_by_username(jid)):
         return helper_error(msg, "modify", "bad-request")
     
-    if(query and item and jid and users.get(jid)):
-        # ==== ini delete roster masih ke data dummy
-        delete_from_rosters(table_roster, username, item)
-
+    tmp_r = helper_check_and_get_roster(item["jid"], username)
+    # Validitas jika tidak ada keterhubungan atau tipe subscriptionnya adalah 'from'
+    if(not tmp_r or tmp_r.get("subscription") == "from"):
+        return helper_error(msg, "modify", "bad-request")
+    else:
+        delete_from_rosters(username, item)
         del msg["query"]
         return helper_parse_from_req_to_res(msg)
-    else:
-        return helper_error(msg, "modify", "bad-request")

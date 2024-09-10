@@ -3,33 +3,25 @@ import json
 import threading
 from string import printable, digits, punctuation
 from random import randint
-import time
+import ipaddress
 
+from utils.get_time import get_timestamp
 from utils.presence import get_presence_by_jid, init_presence, logout, send_presence_to_someone, set_my_bio
-from utils.roster import delete_roster, get_packet_subscribed_for_init_entity, get_packet_unsubscribed_for_init_entity, get_roster, set_roster
-from utils.relay_less_connection import get_relay_with_less_connection
-from utils.auth import handle_auth, helper_registering_user
+from utils.roster import delete_roster, get_packet_subscribed_for_init_entity, get_packet_unsubscribed_for_init_entity, get_rosters, set_roster
+from utils.auth import handle_auth
 from utils.packet import get_message, get_message_client, get_message_relay, get_message_tracker, send_message
 
-from database.dummy.init_data import components, users, rosters, socket_user
+from database.dummy.init_data import socket_user
+from database.sqlite.component import components as c_db, convert_components_db, delete_all_data_component_db, delete_components_db_by_id, save_component_to_db, get_relay_with_less_connection_db, update_total_connection
+from database.sqlite.user import get_user_by_username, users as u_db , get_user_online
+from database.sqlite.roster import get_roster_user, rosters as r_db
 
-# from database.sqlite.component import components as c_db, delete_all_data_component_db, delete_components_db_by_id, save_component_to_db
- 
-# === Inititate Variable
-# components = [] # List of object = [{}] -> Isinya kumpulan relay
-'''
-    objek relay: {
-        "username":,
-        "ip":,
-        "port":,
-        ....
-    }
-'''
-# ===
-
+u_db.delete_data()
+c_db.delete_data()
+r_db.delete_data()
 
 class SocketClient:
-    def __init__(self, ip_target, port_target):
+    def __init__(self, ip_target, port_target, tipe=None):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if(not ip_target):
@@ -72,165 +64,202 @@ class SocketServer:
         return output
 
 def connect_to_tracker():
-    # client_tracker = SocketClient("192.168.1.6", 5000)
-    client_tracker = SocketClient(None, 5000)
+    client_tracker = SocketClient(None, 5000, tipe="Tracker")
     # ct = Client Tracker
     ct = client_tracker.socket
     my_ip = client_tracker.localAddress
+    ip_is_private = ipaddress.ip_address(my_ip[0]).is_private
 
     objek = {
         "ip_local": my_ip[0],
         "port": my_ip[1],
-        "type": "manager"
+        "type": "manager",
+        "is_private": ip_is_private
     }
-
-    # stringObjek = json.dumps(objek)
-
-    # ct.send(stringObjek.encode())
+    
     send_message(ct, objek)
     message = get_message_tracker(ct)
-    # message = json.loads(message)
     print(message)
-
-    ct.close()
-    return my_ip
+    return ct, my_ip
 
 def get_all_components(components):
-    # print(f"===GAC===")
-    # datas_c = c_db.get_all()
-    # print(datas_c)
-    # print(list(components.values()))
-    # print(f"===END GAC===")
-    return list(components.values())
-    # return convert_components_db(datas_c)
+    return convert_components_db(components)
 
 def lost_connection(reason, tipe, username_relay, username):
-    global components
     print(f"Tipe yang terputus adalah {tipe}")
     print(f"Putus karena {reason}")
     if(tipe and tipe.lower() == "relay"):
-        if(components.get(username_relay)):
-            del components[username_relay]
-        # delete_components_db_by_id(c_db, tuple_condition=username_relay)
-        print(components)
+        # Menghapus komponen relay dari database
+        delete_components_db_by_id(c_db, tuple_condition=username_relay)
     if(username):
+        # Menghapus koneksi dari user
         del socket_user[username]
-        logout(rosters, users, socket_user, username)
+        # Konfigurasi user yang logout atau mengalami error
+        logout(socket_user, username)
     print("Connection end...")
 
+lockThread = threading.Lock()
+
 def handle_component(communicate, tipe, username_relay):  
-    global components, users
     username = None
     error = False
-    while True:
+    while not error:
         try:
-            if(error):
-                del components[username_relay]
-                # delete_components_db_by_id(c_db, tuple_condition=username_relay)
-                break
             messages = None
             if(tipe == "relay"):
                 messages = get_message_relay(communicate)
             elif(tipe == "client"):
                 messages = get_message_client(communicate)
             for msg in messages:
-                print(msg)
-                message = json.loads(msg)
-                if(message.get("error_msg")):
-                    error = True
-                    print(f"Masuk msg error: {message.get('tipe')}")
-                if(message.get("username")):
-                    username = message.get("username")
-                    socket_user[username] = communicate
+                with lockThread:
+                    message = json.loads(msg)
+                    print(message)
+                    if(message.get("error_msg")):
+                        error = True
+                        if(tipe == "relay"):
+                            print(f"Komponen relay dengan username {username_relay} mengalami error....")
+                            delete_components_db_by_id(c_db, tuple_condition=username_relay)
+                            break
+                        elif(tipe == 'client'):
+                            if(username):
+                                print(f"Komponen client dengan username {username} mengalami error....")
+                                logout(socket_user, username)
+                            else:
+                                print(f"Komponen client dengan username \"tanpa username\" mengalami error....")
+                            break
+                    elif(message.get("username")):
+                        username = message.get("username")
+                        socket_user[username] = communicate
 
-                # Ketika mau login atau ketika tiba-tiba user mengalami error
-                if(message.get("type") == "auth" or (users.get(username) and not users.get(username)['online'])):
-                    print("AUTH")
-                    handle_auth(message, users, components, communicate)
-                    continue      
-                
-                elif(message.get("type") == "get_relay_less_connection" and users.get(username) and users[username].get("online")):
-                    print("GET RELAY LESS CONNECTION")
-                    relay_for_user = get_relay_with_less_connection(components)
-                    objek = {"error": False, "msg": "Relay Less Connection", "code": 200, "component": relay_for_user}
-                    send_message(communicate, objek)
-
-                # elif(message.get("message") and message.get("message").lower() == "get components"):
-                #     print("GET COMPONENTS")
-                #     com = get_all_components(components)
-                #     # print(components)
-                #     send_message(communicate, com)
-                #     continue
-
-                elif(message.get("message") and message.get("message").lower() == "ncir"): # new connection in relay
-                    print("Koneksi user terhubung dengan relay!")
-                    username_relay = message.get("username_relay")
-                    components[username_relay]["connection"] = components[username_relay]["connection"] + 1
-
-                elif(message.get("message") and message.get("message").lower() == "ecir"): # end connection in relay
-                    print("Koneksi user terputus dengan relay!")
-                    username_relay = message.get("username_relay")
-                    components[username_relay]["connection"] = components[username_relay]["connection"] - 1
-
-                elif(message.get("stanza") and message.get("stanza").lower() == "iq" and message.get("namespace") and message.get("namespace").lower() == "roster"):
-                    # print("IQ, ROSTER")
-                    # print(message)
-                    # print(username)
-                    # print('==========')
-                    if(message.get("type") and message.get("type").lower()  == "get"):
-                        objek = get_roster(username, rosters, message)
-                        send_message(communicate, objek)
-                    elif(message.get("type") and message.get("type").lower()  == "set" and not message.get("subscription")):
-                        jid_target = message.get('query').get('item').get('jid')
-                        objek = set_roster(username, rosters, message, users)
-                        if(objek['type'] != "error"):
-                            # print("=== Masuk Subscribed ===")
-                            packet_presence_subscribed = get_packet_subscribed_for_init_entity(username, jid_target)
-                            item = rosters[username][jid_target]
-                            packet_presence_subscribed["item"] = item
-                            # print(f"{packet_presence_subscribed}\n=== Akhir Subscribed ===")
-                            send_message(communicate, packet_presence_subscribed)
-                            subscribed_entity_presence = get_presence_by_jid(jid_target, users)
-                            subscribed_entity_presence['to'] = username
-                            send_message(communicate, subscribed_entity_presence)
-                            # print(subscribed_entity_presence)
-                            # time.sleep(0.2)
-                            # send_presence_to_someone(username, socket_user, subscribed_entity_presence)
-                            # pass
-                        send_message(communicate, objek)
-                    elif(message.get("type") and message.get("type").lower() == "set" and message.get("subscription") and message.get("subscription").lower() == "remove"):
-                        jid_target = message.get('query').get('item').get('jid')
-                        objek = delete_roster(username, rosters, message, users)
-                        if(objek['type'] != 'error'):
-                            packet_presence_unsubscribed = get_packet_unsubscribed_for_init_entity(username, jid_target)
-                            send_message(communicate, packet_presence_unsubscribed)
+                    # Ketika mau login atau belum online, kalo udah online minta get_relay_less_connection aja
+                    if(tipe == "client" and message.get("type") == "auth" and not get_user_online(username)):
+                        print("=========================================")
+                        print("AUTH")
+                        handle_auth(message, communicate, u_db, get_relay_with_less_connection_db)
+                        print("=========================================")
+                        # continue
+                    
+                    # Ketika ada relay yang tiba-tiba error dan user mau relay dengan koneksi paling rendah terbaru
+                    elif(tipe == "client" and message.get("type") == "get_relay_less_connection" and get_user_online(username)):
+                        print("=========================================")
+                        print("GET RELAY LESS CONNECTION")
+                        relay_for_user = get_relay_with_less_connection_db()
+                        objek = {"error": False, "msg": "Relay Less Connection", "code": 200, "component": relay_for_user}
+                        print("=========================================")
                         send_message(communicate, objek)
 
-                elif(message.get("stanza") and message.get("stanza").lower() == "presence"):
-                    if(not message.get('type') and not message.get("bio") and not message.get("to")):
-                        init_presence(rosters, users, socket_user, username)
-                    elif(message.get('bio')):
-                        set_my_bio(rosters, users, socket_user, username, message)
-                    elif(message.get('to')):
-                        jid_target = message.get('to')
-                        if(not users.get(jid_target)):
-                            objek_presence_error = {'stanza': 'presence', 'type': 'error', 'to': username, 'target': jid_target}
-                            send_message(communicate, objek_presence_error)
-                            continue
-                        # Kirim status presence init_entity ke target_entity
-                        if(users.get(jid_target).get("online")):
-                            init_entity_presence = get_presence_by_jid(username, users)
-                            init_entity_presence['directed_entity'] = True
-                            send_presence_to_someone(jid_target, socket_user, init_entity_presence)
-                        # Ambil status dari target_entity dan kirim ke init_entity
-                        target_entity_presence = get_presence_by_jid(jid_target, users)
-                        target_entity_presence['directed_entity'] = True
-                        print(target_entity_presence)
-                        send_presence_to_someone(username, socket_user, target_entity_presence)
-                    elif(message.get('type') == 'unavailable'):
-                        logout(rosters, users, socket_user, username)
-                        break
+                    # new connection in relay
+                    elif(message.get("message") and message.get("message").lower() == "ncir" and tipe == "relay"):
+                        print("=========================================")
+                        print("NCIR")
+                        print("Koneksi user terhubung dengan relay!")
+                        username_relay = message.get("username_relay")
+                        update_total_connection(username_relay, get_timestamp, 'NCIR')
+                        print("=========================================")
 
+                    # end connection in relay
+                    elif(message.get("message") and message.get("message").lower() == "ecir" and tipe == "relay"):
+                        print("=========================================")
+                        print("ECIR")
+                        print("Koneksi user terputus dengan relay!")
+                        username_relay = message.get("username_relay")
+                        update_total_connection(username_relay, get_timestamp, 'ECIR')
+                        print("=========================================")
+
+                    # Mengelola yang berkaitan dengan roster
+                    elif(message.get("stanza") and message.get("stanza").lower() == "iq" and message.get("namespace") and message.get("namespace").lower() == "roster"):
+                        print("=========================================")
+                        print("IQ, ROSTER")
+                        # Mengelola user yang meminta rosternya
+                        if(message.get("type") and message.get("type").lower()  == "get"):
+                            print(f"Terjadi permintaan mendapatkan roster dari user {username}")
+                            objek = get_rosters(username, message)
+                            send_message(communicate, objek)
+                        # Mengelola roster yang ingin menambahkan atau memperbarui roster item
+                        elif(message.get("type") and message.get("type").lower()  == "set" and not message.get("subscription")):
+                            print(f"Terjadi permintaan untuk menambahkan atau memperbarui roster item dari user {username}")
+                            jid_target = message.get('query').get('item').get('jid')
+                            objek = set_roster(username, message)
+                            if(objek['type'] != "error"):
+                                # Membuat presence bertipe "subscribed" untuk user pengirim
+                                packet_presence_subscribed = get_packet_subscribed_for_init_entity(username, jid_target)
+                                # Mengambil data roster item di dalam roster terbaru untuk user pengirim dari database
+                                item = get_roster_user(username, jid_target)
+                                print(f"ITEM {item}")
+                                print(f"GET ITEM DB ROSTER: {get_roster_user(username, jid_target)}")
+                                # Melengkapi packet presence bertipe "subscribed" dengan roster item terbaru
+                                packet_presence_subscribed["item"] = item
+                                # Mengirimkan packet lengkap presence bertipe "subscribed" kepada user pengirim
+                                send_message(communicate, packet_presence_subscribed)
+                                if(item.get("subscription") == "both" and get_user_online(jid_target)):
+                                    packet_presence_subscribed_for_roster_item = get_packet_subscribed_for_init_entity(username, jid_target)    
+                                    item_for_roster_item = get_roster_user(jid_target, username)
+                                    packet_presence_subscribed_for_roster_item["item"] = item_for_roster_item
+                                    send_message(socket_user[jid_target], packet_presence_subscribed_for_roster_item)
+                                # Mengambil data presence terbaru dari roster item yang dikirimkan oleh user pengirim
+                                subscribed_entity_presence = get_presence_by_jid(jid_target)
+                                subscribed_entity_presence['to'] = username
+                                # Mengirimkan packet presence terbaru roster item kepada user pengirim
+                                send_message(communicate, subscribed_entity_presence)
+                            else:
+                                print(f"Terjadi error saat user {username} melakukan permintaan menambahkan atau mengubah roster item")
+                            # Mengirimkan hasil dari set roster item atau update roster item kepada user pengirim
+                            send_message(communicate, objek)
+                        # Menghapus roster item dari roster user pengirim    
+                        elif(message.get("type") and message.get("type").lower() == "set" and message.get("subscription") and message.get("subscription").lower() == "remove"):
+                            print(f"Terjadi permintaan menghapus roster item dari user {username}")
+                            jid_target = message.get('query').get('item').get('jid')
+                            objek = delete_roster(username, message) # delete_roster_user
+                            if(objek['type'] != 'error'):
+                                # Membuat presence bertipe "unsubscribed" untuk user pengirim
+                                packet_presence_unsubscribed = get_packet_unsubscribed_for_init_entity(username, jid_target)
+                                # Mengirim packet presence kepada user pengirim
+                                send_message(communicate, packet_presence_unsubscribed)
+                            else:
+                                print(f"Terjadi error saat user {username} melakukan permintaan menghapus roster item")
+                            # Mengirimkan hasil dari menghapus roster item kepada user pengirim
+                            send_message(communicate, objek)
+                        # print("Lewatin semua kok")
+                        print("=========================================")
+
+                    # Mengelola yang berkaitan dengan presence
+                    elif(message.get("stanza") and message.get("stanza").lower() == "presence"):
+                        print("=========================================")
+                        print("PRESENCE")
+                        # Mengelola init presence
+                        if(not message.get('type') and not message.get("bio") and not message.get("to")):
+                            print(f"Terjadi permintaan init presence dari user dengan username {username}")
+                            init_presence(socket_user, username)
+                        # Mengelola ketika user memperbarui bio-nya
+                        elif(message.get('bio')):
+                            print(f"Terjadi permintaan perubahan bio dari user dengan username {username}")
+                            set_my_bio(socket_user, username, message)
+                        # Mengelola ketika user membuat permintaan directed presence
+                        elif(message.get('to')):
+                            jid_target = message.get('to')
+                            print(f"Terjadi permintaan directed presence yang dilakukan oleh user {username} dengan target user adalah {jid_target}")
+                            if(not get_user_by_username(jid_target)):
+                                print(f"Terjadi error saat permintaan directed presence karena target user {jid_target} tidak terdaftar di dalam sistem")
+                                objek_presence_error = {'stanza': 'presence', 'type': 'error', 'to': username, 'target': jid_target}
+                                send_message(communicate, objek_presence_error)
+                                continue
+                            # Kirim status presence init_entity ke target_entity jika target_entity online
+                            if(get_user_online(jid_target)):
+                                print(f"Mengirimkan directed presence kepada target user {jid_target} karena target user sedang online")
+                                init_entity_presence = get_presence_by_jid(username)
+                                init_entity_presence['directed_entity'] = True
+                                send_presence_to_someone(jid_target, socket_user, init_entity_presence)
+                            # Ambil status dari target_entity dan kirim ke init_entity
+                            target_entity_presence = get_presence_by_jid(jid_target)
+                            target_entity_presence['directed_entity'] = True
+                            print(target_entity_presence)
+                            send_presence_to_someone(username, socket_user, target_entity_presence)
+                        # Mengelola ketika user membuat permintaan presence tipe "unavailable" atau logout
+                        elif(message.get('type') == 'unavailable'):
+                            print(f"Terjadi permintaan presence bertipe 'unavailable' dari user {username}")
+                            logout(socket_user, username)
+                            error = True
+                        print("=========================================")
         except ConnectionAbortedError as e:
             lost_connection(e, tipe, username_relay, username)
             break
@@ -244,66 +273,99 @@ def handle_component(communicate, tipe, username_relay):
             lost_connection(e, tipe, username_relay, username)
             break
 
-my_address = connect_to_tracker()
+ct, my_address = connect_to_tracker()
 
 m = SocketServer(my_address[1])
 manager = m.socket
 
 print("Manager listening...")
 
-# ====== BAGIAN RELAY
-collections_username = set()
-
+# Fungsi untuk menghasilkan username untuk relay yang baru terkoneksi sepanjang 10 karakter
 def generate_username(w):
     result = ""
     length_w = len(w) - 1
-    for i in range(10):
+    for _ in range(10):
         result += w[randint(0, length_w)]
     return result
 
-def random_username_for_relay(collections_username):
+# Fungsi validasi untuk username relay, untuk memastikan bahwa username akan unik
+# def random_username_for_relay(c_db, data):
+def random_username_for_relay(c_db):
+    '''
+    ### Jika mau diimplementasiin logic, 
+    ### jika ip address dan port yang sama sudah terdaftar maka tidak boleh menjadi relay
+    # Mengecek validitas bahwa ip address dan port belum terdaftar sebagai relay
+    # check_validity_ip_and_port = not c_db.get_all_with_limit(1, ['ip_address', 'port'], (data.get("ip_address"), data.get("port")), ['AND'])
+    # if(not check_validity_ip_and_port):
+    #     return False
+    '''
     # printable, digits, dan punctuation dari library string
-    letter = printable + digits + punctuation
+    # letter = printable + digits + punctuation
+    letter = printable
     while True:
         username_relay = generate_username(letter)
-        bool1 = not (username_relay in collections_username)
-        # bool2 = not c_db.get_all(['component_id'], (username_relay,))
-        if(bool1):
-            collections_username.add(username_relay)
+        # Mengecek validitas bahwa username akan unik
+        check_validity_username_of_relay = not c_db.get_all_with_limit(1, ['component_id'], (username_relay,))
+        if(check_validity_username_of_relay):
             return username_relay
 
-def config_new_relay(components, msg, uname):
+# Konfigurasi relay yang baru saja melakukan koneksi
+def config_new_relay(msg, uname):
     msg["username"] = uname
     msg["connection"] = 0
     print(f"CONFIG RELAY: {msg}")
-    components[uname] = msg
-    # save_component_to_db(list(msg.values()))
-# ======
+    # Menyimpan relay baru ke dalam database
+    save_component_to_db(list(msg.values()), get_timestamp)
 
+# Fungsionalitas untuk menerima setiap koneksi yang baru terhubung dengan manager
 while True:
     try:
         connection, address = manager.accept()
+        # Fungsionalitas penerimaan pesan
         messages = get_message(connection)
         for msg in messages:
             message = json.loads(msg)
+            print(message)
             username_relay = None
+            # Metode yang dilakukan jika koneksi yang baru bertipe relay
             if(message.get("type").lower() == "relay"):
-                username_relay = random_username_for_relay(collections_username)
-                config_new_relay(components, message, username_relay)
-                # c = list(components.values())
-                c = get_all_components(components)
+                # print(f'RELAY MESSAGE: {msg}')
+                # username_relay = random_username_for_relay(c_db, message)
+                username_relay = random_username_for_relay(c_db)
+                '''
+                ### Jika mau diimplementasiin logic, 
+                ### jika ip address dan port yang sama sudah terdaftar maka tidak boleh menjadi relay
+                # if(not username_relay):
+                #     obj_error = {
+                #         "error_msg": True,
+                #         "msg": "IP address dan port sudah terdaftar",
+                #         "error-type": "bad request"
+                #     }
+                #     send_message(connection, obj_error)
+                #     continue
+                '''
+                # Konfigurasi awal relay
+                config_new_relay(message, username_relay)
+                # Mengambil semua data komponen yang terkoneksi dengan manager
+                c = get_all_components(c_db.get_all())
+                # Membuat packet yang akan dikirimkan kepada relay yang baru terkoneksi
                 objek = {
                     "components": c,
                     "username": username_relay
                 }
-                # print(f"OBJ R: {objek}")
+                # Mengirimkan semua data komponen kepada relay yang baru terkoneksi
                 send_message(connection, objek)
-            # ip_is_private = message.get("is_private")
+            # Mendapatkan tipe dari komponen yang terhubung
             tipe = message.get('type')
-            # print(message)
+            # Membuat layanan eksklusif untuk menerima packet pesan dari komponen terkoneksi
+            # lockThread = threading.Lock()
             threading.Thread(target=handle_component, args=(connection, tipe, username_relay), daemon=True).start()
-            # print(components)
+    except KeyboardInterrupt as e:
+        print("Masuk keyboard interrupt")
+        delete_all_data_component_db()
+        break
     except Exception as e:
-        # delete_all_data_component_db()
-        print("----End Manager ----")
+        print("Masuk exception")
+        print(e)
+        delete_all_data_component_db()
         break

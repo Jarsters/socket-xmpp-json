@@ -1,5 +1,6 @@
 import json
 import re
+import time
 
 msg = ""
 
@@ -15,15 +16,18 @@ def get_message(communicate):
     message = communicate.recv(65536)
     message = message.decode()
     items = message.split('\x80\x81\x82')
-    for i in items:
-        if(msg):
-            i = msg + i
-            msg = ""
-            yield i
-        elif(verify(i)):
+    if(len(items) == 1 and not items[0]):
+        yield '{"error_msg": true, "tipe": "socket peer is closed"}'
+    else:
+        for i in items:
+            if(msg):
+                i = msg + i
+                msg = ""
                 yield i
-        else:
-            msg = i
+            elif(verify(i)):
+                    yield i
+            else:
+                msg = i
 
 def send_message(communicate, msg):
     msg = json.dumps(msg).encode()

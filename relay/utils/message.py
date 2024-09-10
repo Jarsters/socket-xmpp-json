@@ -13,7 +13,7 @@ def send_packet_error(communicate, code_error, initiator):
         "from": "relay",
         "to": initiator,
         "error": True,
-        "body": "User not found Or User not online"
+        "body": "User not found or User not online"
     }
     if(code_error == 404):
         send_message(communicate, packet)
