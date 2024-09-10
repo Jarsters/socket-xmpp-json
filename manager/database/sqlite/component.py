@@ -8,8 +8,8 @@ reference_table = None
 reference_column_of_table = None
 
 
-# components = SQL(table_name, columns_table, type_of_columns, db_name="manager.db")
-components = SQL(table_name, columns_table, type_of_columns, db_name="manager.sql")
+components = SQL(table_name, columns_table, type_of_columns, db_name="manager.db")
+# components = SQL(table_name, columns_table, type_of_columns, db_name="manager.sql")
 
 # Ide 1 jadiin fungsi aja
 

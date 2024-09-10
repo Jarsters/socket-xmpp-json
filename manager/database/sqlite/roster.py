@@ -7,10 +7,10 @@ foreign_key_column = ['id_owner_roster']
 reference_table = ['user']
 reference_column_of_table = ['user_id']
 
-# rosters = SQL(table_name, columns_table, type_of_columns, foreign_key_column,\
-#               reference_table, reference_column_of_table, db_name='manager.db')
 rosters = SQL(table_name, columns_table, type_of_columns, foreign_key_column,\
-              reference_table, reference_column_of_table, db_name='manager.sql')
+              reference_table, reference_column_of_table, db_name='manager.db')
+# rosters = SQL(table_name, columns_table, type_of_columns, foreign_key_column,\
+#               reference_table, reference_column_of_table, db_name='manager.sql')
 
 # Ide 1 jadiin fungsi aja
 

@@ -7,8 +7,8 @@ foreign_key_column = None
 reference_table = None
 reference_column_of_table = None
 
-# users = SQL(table_name, columns_table, type_of_columns, db_name='manager.db')
-users = SQL(table_name, columns_table, type_of_columns, db_name='manager.sql')
+users = SQL(table_name, columns_table, type_of_columns, db_name='manager.db')
+# users = SQL(table_name, columns_table, type_of_columns, db_name='manager.sql')
 
 # Ide 1 jadiin fungsi aja
 

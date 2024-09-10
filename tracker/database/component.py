@@ -7,7 +7,8 @@ foreign_key_column = None
 reference_table = None
 reference_column_of_table = None
 
-components = SQL(table_name, columns_table, type_of_columns, db_name="tracker.sql")
+components = SQL(table_name, columns_table, type_of_columns, db_name="tracker.db")
+# components = SQL(table_name, columns_table, type_of_columns, db_name="tracker.sql")
 
 '''
     {
