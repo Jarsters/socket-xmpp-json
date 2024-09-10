@@ -241,10 +241,14 @@ def config_starter_relay(m): # m = message_from_manager
     connections = m.get("components") # Components Relay yang diberikan Manager
     for c in connections:
         print("Masuk for")
+        print(c)
         ip = c.get("ip_local")
         port = c.get("port")
         # Mengecek agar tidak terkoneksi ke diri sendiri
-        if(ip == mip and port != mport):
+        bool1 = ip == mip and port != mport
+        bool2 = ip != mip and port == mport
+        bool3 = ip != mip and port != mport
+        if(bool1 or bool2 or bool3):
             connection_with_another_relay, username_relay, usernames_in_another_relay = connect_to_another_relay(ip, port, my_username)
             if(not username_relay):
                 continue
