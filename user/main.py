@@ -41,9 +41,11 @@ class SocketClient:
         return output
 
 def connect_to_tracker():
-    # client_tracker = SocketClient("192.168.1.6", 5000)
-    client_tracker = SocketClient(None, 5000)
-    # client_tracker = SocketClient("103.178.153.189", 5000)
+    ask = input("Local (y/n)?")
+    if(ask.lower() == 'y'):
+        client_tracker = SocketClient(None, 5000, tipe="Tracker")
+    else:
+        client_tracker = SocketClient("103.178.153.189", 5000, tipe="Tracker")
     # ct = Client Tracker
     ct = client_tracker.socket
     my_ip = client_tracker.localAddress
