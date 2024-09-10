@@ -278,6 +278,7 @@ while not s2:
         messages = get_message_manager(relay_to_manager)
         for msg in messages:
             msg_from_manager = json.loads(msg)
+            print(f"PESAN DARI MANAGER DI MAIN: {msg_from_manager}")
             # Melakukan konfigurasi awal saat relay pertama kali online, dengan daftar komponen yang diberikan oleh manager
             config_starter_relay(msg_from_manager)
             my_port = my_ip[1]
