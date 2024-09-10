@@ -10,7 +10,10 @@ from utils.packet import get_message, send_message
 class SocketServer:
     def __init__(self, port=5000):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        except:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         self.localIP = self.getMyLocalIP()
         self.socket.bind((self.localIP, port))
         self.socket.listen()

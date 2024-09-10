@@ -23,7 +23,10 @@ r_db.delete_data()
 class SocketClient:
     def __init__(self, ip_target, port_target, tipe=None):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        except:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         if(not ip_target):
             ip_target = self.getMyLocalAddress()[0]
         self.address_target = (ip_target, port_target)
@@ -51,7 +54,10 @@ class SocketClient:
 class SocketServer:
     def __init__(self, port=5000):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        except:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         self.localIP = self.getMyLocalIP()
         self.socket.bind((self.localIP, port))
         self.socket.listen()
@@ -64,7 +70,8 @@ class SocketServer:
         return output
 
 def connect_to_tracker():
-    client_tracker = SocketClient(None, 5000, tipe="Tracker")
+    # client_tracker = SocketClient(None, 5000, tipe="Tracker")
+    client_tracker = SocketClient("103.178.153.189", 5000, tipe="Tracker")
     # ct = Client Tracker
     ct = client_tracker.socket
     my_ip = client_tracker.localAddress

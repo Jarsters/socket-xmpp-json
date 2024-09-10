@@ -16,10 +16,10 @@ def handle_message_from_relay(communicate):
                 initiator = message.get("from")
                 msg = message.get("body")
                 print(f"\n\t{initiator}: {msg}")
-        except WindowsError as wer:
-            print(wer)
-            print("Connection with relay ended winerror...")
-            break
+        # except WindowsError as wer:
+        #     print(wer)
+        #     print("Connection with relay ended winerror...")
+        #     break
         except Exception as e:
             print(e)
             print("Connection with relay ended exception....")

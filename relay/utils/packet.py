@@ -56,10 +56,10 @@ def get_message_tracker(communicate):
     try:
         message = communicate.recv(65536)
         message = message.decode()
-    except WindowsError as e:
-        print("masuk error winerror")
-        print(e)
-        message = json.dumps({"error_msg": True, "tipe": "winerror"})
+    # except WindowsError as e:
+    #     print("masuk error winerror")
+    #     print(e)
+    #     message = json.dumps({"error_msg": True, "tipe": "winerror"})
     except Exception as e:
         print("masuk error get message relay")
         print(e)
@@ -86,8 +86,10 @@ def get_message_relay(communicate):
                         yield i
                 else:
                     msg_relay = i
-    except WindowsError as e:
-         items = ['{"error_msg": true, "tipe": "winerror"}']
+    except Exception as e:
+        print(e)
+    # except WindowsError as e:
+    #      items = ['{"error_msg": true, "tipe": "winerror"}']
 
 def get_message(communicate):
     global msg
