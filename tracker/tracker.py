@@ -30,6 +30,7 @@ def delete_component(message, id_component):
     print("Masuk ke delete component")
     print(message)
     delete_component_by_id(id_component, get_timestamp)
+    print(f"Daftar koneksi dalam sistem {get_all()}\r\n")
 
 def handleComponent(communicate:socket.socket, msg, id_component):
     error = False
