@@ -1,5 +1,6 @@
 import json
 import re
+import time
 
 msg = ""
 msg_manager = ""
@@ -74,9 +75,10 @@ def get_message_relay(communicate):
         message = ""
         message = communicate.recv(65536)
         message = message.decode()
+        # print(f"INI MESSAGE RELAY: {message}")
         items = message.split('\x80\x81\x82')
         if(len(items) == 1 and not items[0]):
-            yield '{"error_msg": true, "tipe": "socket peer is closed"}'
+            yield '{"error_msg": true, "tipe": "socket peer relay is closed"}'
         else:
             for i in items:
                 if(msg_relay):
@@ -88,9 +90,10 @@ def get_message_relay(communicate):
                 else:
                     msg_relay = i
     except Exception as e:
-        print(e)
+        # print(e)
+        yield '{"error_msg": true, "tipe": "exception"}'
     # except WindowsError as e:
-    #      items = ['{"error_msg": true, "tipe": "winerror"}']
+    #     yield '{"error_msg": true, "tipe": "winerror"}'
 
 def get_message(communicate):
     global msg

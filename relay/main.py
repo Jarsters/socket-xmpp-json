@@ -143,8 +143,15 @@ def handle_component_relay(communicate, connected_relay_username):
     error = False
     while not error:
         messages = get_message_relay(communicate)
+        # print([json.loads(msg) if msg else "kosong" for msg in messages])
+        # print("diatas")
+        # # time.sleep(2)
         for msg in messages:
+            print("Masuk ke sini")
+            # time.sleep(2)
             message = json.loads(msg)
+            print(message)
+            time.sleep(2)
             # Menangani jika tiba-tiba mengalami error atau terputus untuk komponen relay
             if(message.get("error_msg")):
                 print('==========================================')
@@ -153,6 +160,7 @@ def handle_component_relay(communicate, connected_relay_username):
                 delete_disconnected_relay(connected_relay_username)
                 error = True
                 print('==========================================')
+                break
             # Mengelola packet yang masuk adalah stanza message
             elif(message.get("stanza") and message.get("stanza") == "message"):
                 print('==========================================')
@@ -222,9 +230,12 @@ def connect_to_another_relay(ip, port, uname):
     
     send_message(cwar, objek)   
     messages = get_message_relay(cwar)
+    print("Masuk messages")
     for msg in messages:
         msg = json.loads(msg)
+        print(msg)
         if(msg.get("error_msg")):
+            print("Masuk error")
             return False, False, False
         usernames_in_another_relay = msg.get("username_users")
         username_relay = msg.get("relay_username")

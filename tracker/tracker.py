@@ -2,7 +2,7 @@ import socket
 import json
 import threading
 
-from database.component import delete_component_by_id, delete_components, get_components, save_component_to_db
+from database.component import delete_component_by_id, delete_components, get_all, get_components, save_component_to_db
 from utils.get_time import get_timestamp
 from utils.packet import get_message, send_message
 
@@ -64,6 +64,8 @@ def handleComponent(communicate:socket.socket, msg, id_component):
 s = SocketServer()
 server = s.socket
 print(f"Tracker listening .... on ({s.localIP} - 5000)")
+print(f"Daftar koneksi dalam sistem {get_components()}")
+print("================================================")
 
 while True:
     connection, address = server.accept()
@@ -78,7 +80,10 @@ while True:
             data = list(message.values())
             id_component = save_component_to_db(data, get_timestamp)
             # components.append(message)
+        print(f"Daftar koneksi dalam sistem {get_all()}")
         feedback = get_components()
+        print(f"Koneksi yang diberikan kepada komponen terkoneksi {feedback}")
         feedback = json.dumps(feedback)
         connection.send(feedback.encode())
         threading.Thread(target=handleComponent, args=(connection, message, id_component), daemon=True).start()
+        print("================================================")

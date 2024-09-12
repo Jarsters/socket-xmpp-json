@@ -2,7 +2,7 @@ from .init_db import SQL
 
 table_name = "component"
 columns_table = ['component_id', 'ip_address', 'port', 'type', 'is_private', 'status', 'created_at', 'updated_at']
-type_of_columns = ['TEXT', 'TEXT', 'INTEGER', 'TEXT', 'TEXT', 'INTEGER', 'INTEGER', 'INTEGER']
+type_of_columns = ['', 'TEXT', 'INTEGER', 'TEXT', 'TEXT', 'INTEGER', 'INTEGER', 'INTEGER']
 foreign_key_column = None
 reference_table = None
 reference_column_of_table = None
@@ -31,14 +31,29 @@ def save_component_to_db(component: list, get_timestamp):
 
 def formatting_components(data):
     res = []
-    for d in data:
-        res.append({
-            'ip_local': d[0],
-            'port': d[1],
-            'type': d[2],
-            'is_private': d[3],
-        })
+    if(data and len(data[0]) == 5):
+        for d in data:
+            res.append({
+                'ip_local': d[0],
+                'port': d[1],
+                'type': d[2],
+                'is_private': d[3],
+                'status': d[4]
+            })
+    else:
+        for d in data:
+            res.append({
+                'ip_local': d[0],
+                'port': d[1],
+                'type': d[2],
+                'is_private': d[3],
+            })
     return res
+
+def get_all():
+    column = ['ip_address', 'port', 'type', 'is_private', 'status']
+    res = components.get_some_columns(column)
+    return formatting_components(res)
 
 def get_components():
     column = ['ip_address', 'port', 'type', 'is_private']

@@ -22,7 +22,7 @@ def get_message_relay(communicate):
         # print(f"INI MESSAGE RELAY: {message}")
         items = message.split('\x80\x81\x82')
         if(len(items) == 1 and not items[0]):
-            yield '{"error_msg": true, "tipe": "socket peer is closed"}'
+            yield '{"error_msg": true, "tipe": "socket peer relay is closed"}'
         else:
             for i in items:
                 if(msg_relay):
@@ -36,9 +36,9 @@ def get_message_relay(communicate):
     # except WindowsError as e:
     #     items = ['{"error_msg": true, "tipe": "winerror"}']
     except KeyboardInterrupt as e:
-        items = ['{"error_msg": true, "tipe": "keyboard interrupt"}']
+        yield '{"error_msg": true, "tipe": "exception"}'
     except Exception as e:
-        items = ['{"error_msg": true, "tipe": "exception"}']
+        yield '{"error_msg": true, "tipe": "exception"}'
 
 
 def get_message_client(communicate):
