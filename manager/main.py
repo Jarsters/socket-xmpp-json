@@ -31,7 +31,7 @@ class SocketClient:
             ip_target = self.getMyLocalAddress()[0]
         self.address_target = (ip_target, port_target)
         self.localAddress = self.getMyLocalAddress()
-        print("Try to connecting....")
+        print(f"Try to connecting.... {ip_target} - {port_target} ({tipe})")
         self.connectToTarget()
         print("Connected")
     def connectToTarget(self):
