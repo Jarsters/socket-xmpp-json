@@ -42,6 +42,7 @@ def handleComponent(communicate:socket.socket, msg, id_component):
                     send_message(communicate, get_components())
                 elif(message.get("error_msg")):
                     print(f"Terjadi putus koneksi dengan id_component {id_component}")
+                    delete_component(msg, id_component)
                     error = True
         except ConnectionAbortedError:
             print("Connection end 1 ...")

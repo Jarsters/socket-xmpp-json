@@ -15,24 +15,27 @@ def verify(message):
     return False
 
 def get_message_manager(communicate):
-    global msg_manager
-    message = ""
-    message = communicate.recv(65536)
-    message = message.decode()
-    items = message.split('\x80\x81\x82')
-    print(f"Pesan dari manager: {items}")
-    if(len(items) == 1 and not items[0]):
-        yield '{"error_msg": true, "tipe": "socket peer is closed"}'
-    else:
-        for i in items:
-            if(msg_manager):
-                i = msg_manager + i
-                msg_manager = ""
-                yield i
-            elif(verify(i)):
+    try:
+        global msg_manager
+        message = ""
+        message = communicate.recv(65536)
+        message = message.decode()
+        items = message.split('\x80\x81\x82')
+        print(f"Pesan dari manager: {items}")
+        if(len(items) == 1 and not items[0]):
+            yield '{"error_msg": true, "tipe": "socket peer is closed"}'
+        else:
+            for i in items:
+                if(msg_manager):
+                    i = msg_manager + i
+                    msg_manager = ""
                     yield i
-            else:
-                msg_manager = i
+                elif(verify(i)):
+                        yield i
+                else:
+                    msg_manager = i
+    except Exception as e:
+        yield '{"error_msg": true, "tipe": "socket peer is closed"}'
 
 def get_message_user(communicate):
     global msg_user
@@ -66,6 +69,7 @@ def get_message_tracker(communicate):
         print("masuk error get message relay")
         print(e)
         message = json.dumps({"error_msg": True})
+        return '{"error_msg": true, "tipe": "socket peer is closed"}'
     return json.loads(message)
 
 def get_message_relay(communicate):

@@ -63,7 +63,6 @@ class SQL():
                 command += f" FOREIGN KEY ({column_reference}) REFERENCES {table_reference} ({column_of_table}) ON DELETE CASCADE,"
         command = command[:-1] + ")"
         cursor.execute(command)
-        print(f"MAKE TABLE TRACKER: {command}")
         # cursor.execute("PRAGMA foreign_keys = OFF;")
         self.close_connection(connection)
 

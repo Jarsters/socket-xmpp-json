@@ -74,6 +74,7 @@ def get_message_tracker(communicate):
         print("masuk error get message")
         print(e)
         msg_tracker = json.dumps({"error_msg": True})
+        return '{"error_msg": true, "tipe": "socket peer is closed"}'
     return json.loads(msg_tracker)
 
 def get_message(communicate):
