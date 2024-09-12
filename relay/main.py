@@ -114,7 +114,8 @@ def config_new_relay(uname, communicate):
 def delete_disconnected_relay(uname):
     global connection_relay, user_in_another_relay
     # Menghapus relay dari daftar koneksi relay
-    del connection_relay[uname]
+    if(connection_relay.get(uname)):
+        del connection_relay[uname]
     target_delete = []
     for key, uname_relay in user_in_another_relay.items():
         if(uname_relay == uname):
@@ -240,15 +241,11 @@ def config_starter_relay(m): # m = message_from_manager
     my_username = m.get("username")
     connections = m.get("components") # Components Relay yang diberikan Manager
     for c in connections:
-        print("Masuk for")
-        print(c)
         ip = c.get("ip_local")
         port = c.get("port")
         # Mengecek agar tidak terkoneksi ke diri sendiri
-        bool1 = ip == mip and port != mport
-        bool2 = ip != mip and port == mport
-        bool3 = ip != mip and port != mport
-        if(bool1 or bool2 or bool3):
+        mine = ip == mip and port == mport
+        if(not mine):
             connection_with_another_relay, username_relay, usernames_in_another_relay = connect_to_another_relay(ip, port, my_username)
             if(not username_relay):
                 continue
@@ -269,7 +266,6 @@ while not s2:
             target = m
             break
     if(target):
-        print(target)
         ip = target.get("ip_local")
         port = target.get("port")
         s2 = SocketClient(ip, port, tipe="Manager")
@@ -285,7 +281,6 @@ while not s2:
         messages = get_message_manager(relay_to_manager)
         for msg in messages:
             msg_from_manager = json.loads(msg)
-            print(f"PESAN DARI MANAGER DI MAIN: {msg_from_manager}")
             # Melakukan konfigurasi awal saat relay pertama kali online, dengan daftar komponen yang diberikan oleh manager
             config_starter_relay(msg_from_manager)
             my_port = my_ip[1]

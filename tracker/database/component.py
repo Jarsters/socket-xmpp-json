@@ -47,9 +47,10 @@ def get_components():
     res = components.get_some_columns(column, column_condition, tuple_condition)
     return formatting_components(res)
 
-def delete_component_by_id(id):
-    column_set = ['status']
-    tuple_set = (0,)
+def delete_component_by_id(id, get_timestamp):
+    timestamp = get_timestamp()
+    column_set = ['status', 'updated_at']
+    tuple_set = (0, timestamp,)
     column_condition = ['component_id']
     tuple_condition = (id,)
     components.update_data(column_set, tuple_set, column_condition, tuple_condition)

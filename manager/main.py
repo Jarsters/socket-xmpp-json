@@ -299,7 +299,6 @@ def generate_username(w):
     return result
 
 # Fungsi validasi untuk username relay, untuk memastikan bahwa username akan unik
-# def random_username_for_relay(c_db, data):
 def random_username_for_relay(c_db):
     '''
     ### Jika mau diimplementasiin logic, 
@@ -335,10 +334,12 @@ while True:
         messages = get_message(connection)
         for msg in messages:
             message = json.loads(msg)
+            print("===================================================")
             print(message)
             username_relay = None
             # Metode yang dilakukan jika koneksi yang baru bertipe relay
             if(message.get("type").lower() == "relay"):
+                print("KONFIGURASI RELAY")
                 # print(f'RELAY MESSAGE: {msg}')
                 # username_relay = random_username_for_relay(c_db, message)
                 username_relay = random_username_for_relay(c_db)
@@ -358,19 +359,21 @@ while True:
                 config_new_relay(message, username_relay)
                 # Mengambil semua data komponen yang terkoneksi dengan manager
                 c = get_all_components(c_db.get_all())
+                print(f"Komponen yang diberikan kepada relay {username_relay} adalah:\r\n {c}")
                 # Membuat packet yang akan dikirimkan kepada relay yang baru terkoneksi
                 objek = {
                     "components": c,
                     "username": username_relay
                 }
                 # Mengirimkan semua data komponen kepada relay yang baru terkoneksi
-                print(f"KONFIGURASI RELAY {objek}")
+                # print(f"KONFIGURASI RELAY {objek}")
                 send_message(connection, objek)
             # Mendapatkan tipe dari komponen yang terhubung
             tipe = message.get('type')
             # Membuat layanan eksklusif untuk menerima packet pesan dari komponen terkoneksi
             # lockThread = threading.Lock()
             threading.Thread(target=handle_component, args=(connection, tipe, username_relay), daemon=True).start()
+            print("===================================================")
     except KeyboardInterrupt as e:
         print("Masuk keyboard interrupt")
         delete_all_data_component_db()

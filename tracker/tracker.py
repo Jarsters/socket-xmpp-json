@@ -1,7 +1,6 @@
 import socket
 import json
 import threading
-import time
 
 from database.component import delete_component_by_id, delete_components, get_components, save_component_to_db
 from utils.get_time import get_timestamp
@@ -27,12 +26,10 @@ class SocketServer:
 
 delete_components()
 
-# components = [] # [{}] => list of object
-
 def delete_component(message, id_component):
     print("Masuk ke delete component")
     print(message)
-    delete_component_by_id(id_component)
+    delete_component_by_id(id_component, get_timestamp)
 
 def handleComponent(communicate:socket.socket, msg, id_component):
     error = False

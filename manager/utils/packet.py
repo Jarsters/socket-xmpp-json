@@ -95,5 +95,4 @@ def get_message(communicate):
 def send_message(communicate, msg):
     msg = json.dumps(msg) + '\x80\x81\x82'
     msg = msg.encode()
-    print("Pesan dikirimkan")
     communicate.send(msg)
