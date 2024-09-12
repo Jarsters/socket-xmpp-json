@@ -74,14 +74,14 @@ while True:
     id_component = None
     for message in messages:
         message = json.loads(message)
-        print(f"Koneksi baru: {message}")
+        print(f"Koneksi baru: {message}\r\n")
         ip_is_private = message.get("is_private")
         tipe = message.get('type').lower()
         if(not ip_is_private or tipe == 'manager' or tipe == 'relay'):
             data = list(message.values())
             id_component = save_component_to_db(data, get_timestamp)
             # components.append(message)
-        print(f"Daftar koneksi dalam sistem {get_all()}")
+        print(f"Daftar koneksi dalam sistem {get_all()}\r\n")
         feedback = get_components()
         print(f"Koneksi yang diberikan kepada komponen terkoneksi {feedback}")
         feedback = json.dumps(feedback)
