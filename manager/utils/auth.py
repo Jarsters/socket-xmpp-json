@@ -25,7 +25,7 @@ def verify_whitespace(data):
     return re.search("\s", data)
 
 # Fungsionalitas yang bertanggung jawab mengelola permintaan registrasi atau login
-def handle_auth(message, communicate, user_db=None, f=None):
+def handle_auth(message, communicate, user_db=None, f=None, message=None):
     username = message.get("username")
     register = message.get("register")
     user = get_user_by_username(username)
