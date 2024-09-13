@@ -174,12 +174,14 @@ def handle_component(communicate, tipe, username_relay):
 
                     # end connection in relay
                     elif(message.get("message") and message.get("message").lower() == "ecir" and tipe == "relay"):
+                        lockWhile.acquire()
                         print("=========================================")
                         print("ECIR")
                         print("Koneksi user terputus dengan relay!")
                         username_relay = message.get("username_relay")
                         update_total_connection(username_relay, get_timestamp, 'ECIR')
                         print("=========================================")
+                        lockWhile.release()
 
                     # Mengelola yang berkaitan dengan roster
                     elif(message.get("stanza") and message.get("stanza").lower() == "iq" and message.get("namespace") and message.get("namespace").lower() == "roster"):
