@@ -176,6 +176,7 @@ def handle_component(communicate, tipe, username_relay):
                     # end connection in relay
                     elif(message.get("message") and message.get("message").lower() == "ecir" and tipe == "relay"):
                         lockWhile.acquire()
+                        print(message)
                         print("=========================================")
                         print("ECIR")
                         print("Koneksi user terputus dengan relay!")
