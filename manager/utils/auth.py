@@ -30,7 +30,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
     register = message.get("register")
     user = get_user_by_username(username)
     if(register):
-        print(f'Terjadi permintaan registrasi dari user {username}')
+        print(f'Terjadi permintaan registrasi dari user {username}\r\n')
         if(user):
             print(f"Terjadi error karena username {username} telah digunakan yang lain")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi gagal
@@ -51,7 +51,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
             send_message(communicate, objek)
             return
         else:
-            print("Registrasi berhasil")
+            print("Registrasi berhasil\r\n")
             # Mendapatkan relay paling sedikit yang akan diberikan kepada user
             relay_for_user = get_relay_with_less_connection_db()
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi berhasil
@@ -62,7 +62,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
             helper_registering_user(username, password, timestamp)
             send_message(communicate, objek)
     else:
-        print(f"Terjadi permintaan login dari user {username}")
+        print(f"Terjadi permintaan login dari user {username}\r\n")
         if(not username or verify_whitespace(username)):
             print(f"Terjadi error karena username {username} kosong atau terdapat whitespace")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal
@@ -96,7 +96,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
             send_message(communicate, objek)
             return
         if(password == password_db):
-            print(f"{username} berhasil melakukan login")
+            print(f"{username} berhasil melakukan login\r\n")
             # Mendapatkan relay paling sedikit yang akan diberikan kepada user
             relay_for_user = get_relay_with_less_connection_db()
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login berhasil

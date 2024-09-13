@@ -128,7 +128,8 @@ def handle_component(communicate, tipe, username_relay):
                         error = True
                         if(tipe == "relay"):
                             print(f"Komponen relay dengan username {username_relay} mengalami error....")
-                            delete_components_db_by_id(c_db, tuple_condition=username_relay)
+                            # delete_components_db_by_id(c_db, tuple_condition=username_relay)
+                            lost_connection(message.get("tipe"), tipe, username_relay, None)
                             break
                         elif(tipe == 'client'):
                             if(username):
