@@ -59,7 +59,7 @@ def delete_components_db_by_id(com:SQL,\
     column_condition = ['component_id']
     tuple_condition = (tuple_condition,)
     com.delete_data(column_condition, tuple_condition, boolean_condition)
-    print(com.get_all())
+    print(f"Komponen yang masih berada dalam manager {com.get_all()}")
 
 def delete_all_data_component_db():
     components.delete_data()
