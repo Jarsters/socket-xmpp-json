@@ -181,7 +181,7 @@ def delete_roster(username, msg):
     elif(not get_user_by_username(jid)):
         return helper_error(msg, "modify", "bad-request")
     
-    tmp_r = helper_check_and_get_roster(item["jid"], username)
+    tmp_r = helper_check_and_get_roster(username, item["jid"])
     # Validitas jika tidak ada keterhubungan atau tipe subscriptionnya adalah 'from'
     if(not tmp_r or tmp_r.get("subscription") == "from"):
         return helper_error(msg, "modify", "bad-request")
