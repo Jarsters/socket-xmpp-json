@@ -106,18 +106,18 @@ def lost_connection(reason, tipe, username_relay, username):
         del socket_user[username]
         # Konfigurasi user yang logout atau mengalami error
         logout(socket_user, username)
-        lockWhile.release()
+        # lockWhile.release()
     # print("Connection end...")
 
 lockThread = threading.Lock()
-lockWhile = threading.Lock()
+# lockWhile = threading.Lock()
 
 def handle_component(communicate, tipe, username_relay):  
     username = None
     error = False
     while not error:
-        if(tipe == "client"):
-            lockWhile.acquire()
+        # if(tipe == "client"):
+        #     lockWhile.acquire()
         try:
             messages = None
             if(tipe == "relay"):
@@ -143,7 +143,7 @@ def handle_component(communicate, tipe, username_relay):
                             else:
                                 print(f"Komponen client dengan username \"tanpa username\" mengalami error....")
                                 error = True
-                                lockWhile.release()
+                                # lockWhile.release()
                             break
                     elif(message.get("username")):
                         username = message.get("username")
@@ -179,7 +179,7 @@ def handle_component(communicate, tipe, username_relay):
 
                     # end connection in relay
                     elif(message.get("message") and message.get("message").lower() == "ecir" and tipe == "relay"):
-                        lockWhile.acquire()
+                        # lockWhile.acquire()
                         print(message)
                         print("=========================================")
                         print("ECIR")
@@ -187,7 +187,7 @@ def handle_component(communicate, tipe, username_relay):
                         username_relay = message.get("username_relay")
                         update_total_connection(username_relay, get_timestamp, 'ECIR')
                         print("=========================================")
-                        lockWhile.release()
+                        # lockWhile.release()
 
                     # Mengelola yang berkaitan dengan roster
                     elif(message.get("stanza") and message.get("stanza").lower() == "iq" and message.get("namespace") and message.get("namespace").lower() == "roster"):
@@ -283,8 +283,8 @@ def handle_component(communicate, tipe, username_relay):
                             logout(socket_user, username)
                             error = True
                         print("=========================================")
-                    if(tipe == "client"):
-                        lockWhile.release()
+                    # if(tipe == "client"):
+                    #     lockWhile.release()
         except ConnectionAbortedError as e:
             lost_connection(e, tipe, username_relay, username)
             break
