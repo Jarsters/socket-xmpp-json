@@ -116,7 +116,8 @@ def handle_component(communicate, tipe, username_relay):
     username = None
     error = False
     while not error:
-        lockWhile.acquire()
+        if(tipe == "client"):
+            lockWhile.acquire()
         try:
             messages = None
             if(tipe == "relay"):
