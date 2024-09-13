@@ -106,7 +106,6 @@ def lost_connection(reason, tipe, username_relay, username):
         del socket_user[username]
         # Konfigurasi user yang logout atau mengalami error
         logout(socket_user, username)
-    if(tipe == "client"):
         lockWhile.release()
     # print("Connection end...")
 
@@ -143,6 +142,8 @@ def handle_component(communicate, tipe, username_relay):
                                 logout(socket_user, username)
                             else:
                                 print(f"Komponen client dengan username \"tanpa username\" mengalami error....")
+                                error = True
+                                lockWhile.release()
                             break
                     elif(message.get("username")):
                         username = message.get("username")
