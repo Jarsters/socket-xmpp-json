@@ -323,7 +323,7 @@ def random_username_for_relay(c_db):
 def config_new_relay(msg, uname):
     msg["username"] = uname
     msg["connection"] = 0
-    print(f"CONFIG RELAY: {msg}")
+    # print(f"CONFIG RELAY: {msg}")
     # Menyimpan relay baru ke dalam database
     save_component_to_db(list(msg.values()), get_timestamp)
 
@@ -340,7 +340,7 @@ while True:
             username_relay = None
             # Metode yang dilakukan jika koneksi yang baru bertipe relay
             if(message.get("type").lower() == "relay"):
-                print("KONFIGURASI RELAY")
+                # print("KONFIGURASI RELAY")
                 # print(f'RELAY MESSAGE: {msg}')
                 # username_relay = random_username_for_relay(c_db, message)
                 username_relay = random_username_for_relay(c_db)
@@ -360,7 +360,7 @@ while True:
                 config_new_relay(message, username_relay)
                 # Mengambil semua data komponen yang terkoneksi dengan manager
                 c = get_all_components(c_db.get_all())
-                print(f"Komponen yang diberikan kepada relay {username_relay} adalah:\r\n {c}")
+                # print(f"Komponen yang diberikan kepada relay {username_relay} adalah:\r\n {c}")
                 # Membuat packet yang akan dikirimkan kepada relay yang baru terkoneksi
                 objek = {
                     "components": c,
