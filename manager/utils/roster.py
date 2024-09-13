@@ -45,25 +45,30 @@ def helper_check_and_get_roster(username, target_jid):
 def set_to_rosters(username, item):
     jid_target = item["jid"]
     updating = False
+    new = False
     # Mengecek apakah init_user sudah masuk ke roster_target
     tmp_item_jid = helper_check_and_get_roster(jid_target, username)
     # Logic komponen manager untuk menentukan apakah roster item akan ditambahkan atau diperbarui saja
     if(not tmp_item_jid):
         tmp_item_jid = {"jid": username, "subscription": None}
+        new = True
     else:
         print("We will updating")
-        updating = True
+        updating = 1
     # Menentuka tipe subscription yang akan ditetapkan berdasarkan logic kepintaran pembeda
     if(not tmp_item_jid.get("subscription")):
         tmp_item_jid["subscription"] = "from"
     elif(tmp_item_jid.get("subscription") == "to"):
-        updating = True
+        updating = 2
         item["subscription"] = "both"
         tmp_item_jid["subscription"] = "both"
-    # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari user's roster
-    helper_set_rosters(username, item, updating)
-    # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari roster item's roster dengan roster itemnya adalah user pengirim
-    helper_set_rosters(jid_target, tmp_item_jid, updating)
+    if(updating == 2 or new):
+        # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari user's roster
+        helper_set_rosters(username, item, updating)
+        # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari roster item's roster dengan roster itemnya adalah user pengirim
+        helper_set_rosters(jid_target, tmp_item_jid, updating)
+    else:
+        helper_set_rosters(username, item, updating)
 
 # Fungsionalitas untuk menghapus roster item dari user's roster
 def delete_from_rosters(username, item):
