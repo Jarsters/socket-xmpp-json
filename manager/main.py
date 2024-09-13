@@ -106,6 +106,7 @@ def lost_connection(reason, tipe, username_relay, username):
         del socket_user[username]
         # Konfigurasi user yang logout atau mengalami error
         logout(socket_user, username)
+    if(tipe == "client"):
         lockWhile.release()
     # print("Connection end...")
 
