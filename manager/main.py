@@ -127,7 +127,8 @@ def handle_component(communicate, tipe, username_relay):
             for msg in messages:
                 with lockThread:
                     message = json.loads(msg)
-                    print(message)
+                    if(message.get("message") != "ecir"):
+                        print(message)
                     if(message.get("error_msg")):
                         error = True
                         if(tipe == "relay"):
@@ -153,7 +154,7 @@ def handle_component(communicate, tipe, username_relay):
                         handle_auth(message, communicate, u_db, get_relay_with_less_connection_db)
                         print("=========================================")
                         # continue
-                    
+
                     # Ketika ada relay yang tiba-tiba error dan user mau relay dengan koneksi paling rendah terbaru
                     elif(tipe == "client" and message.get("type") == "get_relay_less_connection" and get_user_online(username)):
                         print("=========================================")
