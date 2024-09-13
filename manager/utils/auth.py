@@ -30,7 +30,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
     register = message.get("register")
     user = get_user_by_username(username)
     if(register):
-        print(f'Terjadi permintaan registrasi dari user {username}\r\n')
+        # print(f'Terjadi permintaan registrasi dari user {username}\r\n')
         if(user):
             print(f"Terjadi error karena username {username} telah digunakan yang lain")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi gagal
@@ -51,6 +51,8 @@ def handle_auth(message, communicate, user_db=None, f=None):
             send_message(communicate, objek)
             return
         else:
+            print(f'Terjadi permintaan registrasi dari user {username}\r\n')
+            print(message)
             print("Registrasi berhasil\r\n")
             # Mendapatkan relay paling sedikit yang akan diberikan kepada user
             relay_for_user = get_relay_with_less_connection_db()

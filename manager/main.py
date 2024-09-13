@@ -123,7 +123,7 @@ def handle_component(communicate, tipe, username_relay):
             for msg in messages:
                 with lockThread:
                     message = json.loads(msg)
-                    print(message)
+                    # print(message)
                     if(message.get("error_msg")):
                         error = True
                         if(tipe == "relay"):
@@ -146,7 +146,7 @@ def handle_component(communicate, tipe, username_relay):
                     if(tipe == "client" and message.get("type") == "auth" and not get_user_online(username)):
                         print("=========================================")
                         print("AUTH")
-                        handle_auth(message, communicate, u_db, get_relay_with_less_connection_db)
+                        handle_auth(message, communicate, u_db, get_relay_with_less_connection_db, message)
                         print("=========================================")
                         # continue
                     
