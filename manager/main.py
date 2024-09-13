@@ -151,7 +151,9 @@ def handle_component(communicate, tipe, username_relay):
                     if(tipe == "client" and message.get("type") == "auth" and not get_user_online(username)):
                         print("=========================================")
                         print("AUTH")
-                        handle_auth(message, communicate, u_db, get_relay_with_less_connection_db)
+                        result = handle_auth(message, communicate, u_db, get_relay_with_less_connection_db)
+                        if(not result):
+                            username = None
                         print("=========================================")
                         # continue
 
