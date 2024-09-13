@@ -106,7 +106,7 @@ def lost_connection(reason, tipe, username_relay, username):
         del socket_user[username]
         # Konfigurasi user yang logout atau mengalami error
         logout(socket_user, username)
-    lockWhile.release()
+        lockWhile.release()
     # print("Connection end...")
 
 lockThread = threading.Lock()
@@ -275,7 +275,8 @@ def handle_component(communicate, tipe, username_relay):
                             logout(socket_user, username)
                             error = True
                         print("=========================================")
-                    lockWhile.release()
+                    if(tipe == "client"):
+                        lockWhile.release()
         except ConnectionAbortedError as e:
             lost_connection(e, tipe, username_relay, username)
             break
