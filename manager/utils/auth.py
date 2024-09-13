@@ -38,14 +38,14 @@ def handle_auth(message, communicate, user_db=None, f=None):
             send_message(communicate, objek)
             return
         elif(not username or verify_whitespace(username)):
-            print(f"Terjadi error karena username {username} kosong atau terdapat whitespace")
+            # print(f"Terjadi error karena username {username} kosong atau terdapat whitespace")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi gagal
             objek = {"error": True, "msg": "Bad request", "code": 400}
             send_message(communicate, objek)
             return
         password = message.get("password")
         if(not password or verify_whitespace(password)):
-            print(f"Terjadi error karena password kosong atau terdapat whitespace")
+            # print(f"Terjadi error karena password kosong atau terdapat whitespace")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi gagal
             objek = {"error": True, "msg": "Bad request", "code": 400}
             send_message(communicate, objek)
