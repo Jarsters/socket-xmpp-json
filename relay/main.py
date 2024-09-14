@@ -110,6 +110,7 @@ my_ip = s.localAddress
 def config_new_relay(uname, communicate):
     global connection_relay
     connection_relay[uname] = communicate
+    print(f"Koneksi dengan relay lainnya saat ini:\r\n{connection_relay}")
 
 # Fungsionalitas untuk menghapus relay dan juga user yang terkoneksi dengannya
 def delete_disconnected_relay(uname):
@@ -374,9 +375,10 @@ while True:
     connection, address = relay.accept()
     messages = get_message(connection)
     for msg in messages:
-        print(msg)
+        # print(msg)
         message = json.loads(msg)
         if(message.get("username")):
+            print(f"Mendapatkan koneksi baru dari user {msg}")
             username = message.get("username")
             # Menyimpan user ke dalam daftar koneksinya
             connections[username] = connection
@@ -390,6 +392,7 @@ while True:
             send_message(relay_to_manager, objek)
             send_new_user_to_another_relay(username, my_username)
         elif(message.get("type") == "relay"):
+            print(f"Mendapatkan koneksi baru dari relay junior {msg}")
             uname_relay = message.get("relay_username")
             # Memanggil fungsi untuk menyimpan relay yang baru terkoneksi
             config_new_relay(uname_relay, connection)
@@ -402,6 +405,7 @@ while True:
             send_message(connection, objek)
             # Membuat layanan eksklusif untuk mengelola komponen relay
             threading.Thread(target=handle_component_relay, args=(connection, my_username, ), daemon=True).start()
+            print('==========================================')
         elif(message.get("msg") == "Hello relay!"):
             objek = {"msg": "Hallo target"}
             send_message(connection, objek)
