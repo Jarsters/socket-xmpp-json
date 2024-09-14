@@ -18,7 +18,7 @@ def save_component_to_db(component: list, get_timestamp):
     column = ['ip_address', 'port', 'type', "component_id", 'connection', 'created_at', 'updated_at']
     component.append(timestamp)
     component.append(timestamp)
-    # print(f"Menyimpan komponen {component} ke dalam database!\r\n")
+    print(f"Menyimpan komponen {component} ke dalam database!\r\n")
     components.insert_to_table(column, component)
 
 def get_relay_with_less_connection_db():
