@@ -152,15 +152,15 @@ def handle_component_relay(communicate, connected_relay_username):
         # print("diatas")
         # # time.sleep(2)
         for msg in messages:
-            print("Masuk ke sini")
+            # print("Masuk ke sini")
             # time.sleep(2)
             message = json.loads(msg)
-            print(message)
             # time.sleep(2)
             # Menangani jika tiba-tiba mengalami error atau terputus untuk komponen relay
             if(message.get("error_msg")):
                 print('==========================================')
                 print(f"Komponen relay {connected_relay_username} mengalami error")
+                print(message)
                 # Memanggil fungsi untuk menangani relay yang error atau terputus
                 delete_disconnected_relay(connected_relay_username)
                 error = True
@@ -169,7 +169,8 @@ def handle_component_relay(communicate, connected_relay_username):
             # Mengelola packet yang masuk adalah stanza message
             elif(message.get("stanza") and message.get("stanza") == "message"):
                 print('==========================================')
-                print("Relay mendapatkan stanza message dari relay lainnya")
+                print(f"Relay mendapatkan stanza message dari relay {connected_relay_username}")
+                print(message)
                 target = message.get("to")
                 connection_target = connections.get(target)
                 # Memanggil fungsi untuk mengirim stanza message kepada target
@@ -187,6 +188,7 @@ def handle_component_relay(communicate, connected_relay_username):
             elif(message.get("message") and message.get("message").lower() == "new user"):
                 print('==========================================')
                 print("Relay mendapatkan pesan 'new user' dari relay lainnya")
+                print(message)
                 relay_uname = message.get("relay_username")
                 username_user = message.get("username_user")
                 print(f"Koneksi {username_user} kepada {relay_uname} telah tersambung!")
@@ -198,6 +200,7 @@ def handle_component_relay(communicate, connected_relay_username):
             elif(message.get("message") and message.get("message").lower() == "end user"):
                 print('==========================================')
                 print("Relay mendapatkan pesan 'end user' dari relay lainnya")
+                print(message)
                 relay_uname = message.get("username_relay")
                 username_user = message.get("username_user")
                 print(f"Koneksi {username_user} kepada {relay_uname} telah terputus!")
@@ -208,9 +211,18 @@ def handle_component_relay(communicate, connected_relay_username):
             elif(message.get("error") and message.get("activity") == "message from another relay"):
                 print('==========================================')
                 print("Relay mendapatkan packet nilai error 1 dan nilai activity 'messsage from another relay'")
+                print(message)
                 initiate_user = message.get("from")
                 communicate = connections[initiate_user]
                 send_packet_error(communicate, 404, initiate_user)
+                print('==========================================')
+            elif(message.get("success") and message.get("activity") == "message from another relay"):
+                print('==========================================')
+                print("Relay mendapatkan packet nilai success 1 dan nilai activity 'messsage from another relay'")
+                print(message)
+                # initiate_user = message.get("from")
+                # communicate = connections[initiate_user]
+                # send_packet_error(communicate, 404, initiate_user)
                 print('==========================================')
             else:
                 continue
@@ -334,10 +346,12 @@ def handle_component_user(communicate, relay_username, user_username):
                     connection_target = connections.get(target)
                     # Target dalam relay yang sama
                     if(connection_target): 
+                        print("Mengirim pesan kepada target pada relay yang sama")
                         send_message_to_target(connection_target, message)
                     # Target dalam relay yang berbeda
                     else: 
                         relay_user = user_in_another_relay.get(target)
+                        print(f"Meneruskan pesan kepada relay {relay_user}")
                         if(not relay_user):
                             print("Terjadi error karena user yang dituju tidak terdapat di dalam sistem")
                             initiate_user = message.get("from")
