@@ -115,16 +115,19 @@ def config_new_relay(uname, communicate):
 # Fungsionalitas untuk menghapus relay dan juga user yang terkoneksi dengannya
 def delete_disconnected_relay(uname):
     global connection_relay, user_in_another_relay
+    print(f"Menghapus informasi relay {uname}")
     # Menghapus relay dari daftar koneksi relay
     if(connection_relay.get(uname)):
         del connection_relay[uname]
     target_delete = []
+    print(f"Koneksi dengan relay lainnya saat ini:\r\n{connection_relay}")
     for key, uname_relay in user_in_another_relay.items():
         if(uname_relay == uname):
             target_delete.append(key)
     # Menghapus koneksi user yang terhubung dengan relay yang baru saja dihapus
     for target in target_delete:
         del user_in_another_relay[target]
+    print(f"Koneksi user pada relay lainnya saat ini:\r\n{user_in_another_relay}")
 
 # Fungsionalitas mengirimkan informasi new user kepada relay lain yang terkoneksi
 def send_new_user_to_another_relay(username_user, my_uname):
