@@ -61,7 +61,7 @@ def get_presence_user(username):
 def update_status_online(columns_set, data_set_tuple,\
                          columns_condition, data_condition_tuple):
     users.update_data(columns_set, data_set_tuple, columns_condition, data_condition_tuple)
-    print(f"UPDATING STATUS ONLINE: {users.get_all()}")
+    print(f"UPDATING STATUS ONLINE: {users.get_all(columns_condition, data_condition_tuple)}")
 
 def update_bio(columns_set, data_set_tuple,\
                          columns_condition, data_condition_tuple):

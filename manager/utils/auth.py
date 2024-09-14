@@ -35,19 +35,22 @@ def handle_auth(message, communicate, user_db=None, f=None):
             print(f"Terjadi error karena username {username} telah digunakan yang lain")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi gagal
             objek = {"error": True, "msg": "Username used", "code": 409}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
         elif(not username or verify_whitespace(username)):
-            # print(f"Terjadi error karena username {username} kosong atau terdapat whitespace")
+            print(f"Terjadi error karena username {username} kosong atau terdapat whitespace")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi gagal
             objek = {"error": True, "msg": "Bad request", "code": 400}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
         password = message.get("password")
         if(not password or verify_whitespace(password)):
-            # print(f"Terjadi error karena password kosong atau terdapat whitespace")
+            print(f"Terjadi error karena password kosong atau terdapat whitespace")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi gagal
             objek = {"error": True, "msg": "Bad request", "code": 400}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
         else:
@@ -58,6 +61,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
             relay_for_user = get_relay_with_less_connection_db()
             # Pembuatan packet untuk pemberitahuan kepada user bahwa registasi berhasil
             objek = {"error": False, "msg": "Account created", "code": 201, "component": relay_for_user}
+            print(f"Packet success yang dikirimkan kepada user {username}\r\n{objek}")
             password = message.get("password")
             timestamp = get_timestamp()
             # Menyimpan user ke dalam database
@@ -70,6 +74,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
             print(f"Terjadi error karena username {username} kosong atau terdapat whitespace")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal
             objek = {"error": True, "msg": "Bad request", "code": 400}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
         password = message.get("password")
@@ -77,12 +82,14 @@ def handle_auth(message, communicate, user_db=None, f=None):
             print(f"Terjadi error karena password kosong atau terdapat whitespace")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal
             objek = {"error": True, "msg": "Bad request", "code": 400}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
         if(not user):
             print(f"Terjadi error karena username {username} yang dimasukkan tidak terdapat dalam sistem")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal
             objek = {"error": True, "msg": "User not found", "code": 404}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
         password_db = user[1]
@@ -91,11 +98,13 @@ def handle_auth(message, communicate, user_db=None, f=None):
                 print(f"Terjadi error karena password tidak sesuai")
                 # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal
                 objek = {"error": True, "msg": "Bad request", "code": 400}
+                print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
                 send_message(communicate, objek)
                 return False
             print(f"Terjadi error karena user mencoba login ke {username} yang sedang online")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal
             objek = {"error": True, "msg": "Already logged in", "code": 409}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
         if(password == password_db):
@@ -105,6 +114,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login berhasil
             objek = {"error": False, "msg": "Login successfull", "code": 200, "component": relay_for_user}
             # Memperbarui status dari user dari offline ke online
+            print(f"Packet success yang dikirimkan kepada user {username}\r\n{objek}")
             update_status_online(["online", "updated_at"], (1, get_timestamp(),), ['user_id'], (username,))
             send_message(communicate, objek)
             return True
@@ -112,5 +122,6 @@ def handle_auth(message, communicate, user_db=None, f=None):
             print(f"Terjadi error karena password tidak sesuai")
             # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal
             objek = {"error": True, "msg": "Bad request", "code": 400}
+            print(f"Packet error yang dikirimkan kepada user {username}\r\n{objek}")
             send_message(communicate, objek)
             return False
