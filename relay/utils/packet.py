@@ -21,7 +21,7 @@ def get_message_manager(communicate):
         message = communicate.recv(65536)
         message = message.decode()
         items = message.split('\x80\x81\x82')
-        print(f"Pesan dari manager: {items}")
+        # print(f"Pesan dari manager: {items}")
         if(len(items) == 1 and not items[0]):
             yield '{"error_msg": true, "tipe": "socket peer is closed"}'
         else:

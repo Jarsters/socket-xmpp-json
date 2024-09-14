@@ -91,7 +91,8 @@ def connect_to_tracker():
 
     send_message(ct, objek)
     message = get_message_tracker(ct)
-    print(message)
+    print(f"Komponen dari tracker:\r\n {message}")
+    print("==========================================")
     
     return client_tracker, message
 
@@ -151,7 +152,7 @@ def handle_component_relay(communicate, connected_relay_username):
             # time.sleep(2)
             message = json.loads(msg)
             print(message)
-            time.sleep(2)
+            # time.sleep(2)
             # Menangani jika tiba-tiba mengalami error atau terputus untuk komponen relay
             if(message.get("error_msg")):
                 print('==========================================')
@@ -213,7 +214,7 @@ def handle_component_relay(communicate, connected_relay_username):
 # Fungsionalitas untuk melakukan koneksi ke relay yang sudah ada di dalam sistem
 def connect_to_another_relay(ip, port, uname):
     print("Melakukan koneksi dengan relay lainnya")
-    print(f"IP {ip}; PORT {port}")
+    # print(f"IP {ip}; PORT {port}")
     connection_with_another_relay = SocketClient(ip, port, relay=True, tipe="Relay")
     # cwar = Client With Another Relay
     cwar = connection_with_another_relay.socket
@@ -230,10 +231,10 @@ def connect_to_another_relay(ip, port, uname):
     
     send_message(cwar, objek)   
     messages = get_message_relay(cwar)
-    print("Masuk messages")
+    # print("Masuk messages")
     for msg in messages:
         msg = json.loads(msg)
-        print(msg)
+        print(f"Pesan dari relay senior: {msg}")
         if(msg.get("error_msg")):
             print("Masuk error")
             return False, False, False
@@ -265,8 +266,10 @@ def config_starter_relay(m): # m = message_from_manager
             # Menyimpan user yang terkoneksi dengan relay yang baru saja disimpan
             for uname in usernames_in_another_relay:
                 user_in_another_relay[uname] = username_relay
-    print(f"Connection Relay: {connection_relay}")
-    print(f"User in Another Relay: {user_in_another_relay}")
+        print("==========================================")
+    print(f"Connection Relay Konfigurasi: {connection_relay}")
+    print(f"User in Another Relay Konfigurasi: {user_in_another_relay}")
+    print("==========================================")
 
 
 # Connect ke manager
@@ -292,6 +295,8 @@ while not s2:
         messages = get_message_manager(relay_to_manager)
         for msg in messages:
             msg_from_manager = json.loads(msg)
+            print(f"Pesan dari manager: {msg_from_manager}")
+            print("==========================================")
             # Melakukan konfigurasi awal saat relay pertama kali online, dengan daftar komponen yang diberikan oleh manager
             config_starter_relay(msg_from_manager)
             my_port = my_ip[1]
