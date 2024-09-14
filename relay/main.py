@@ -326,6 +326,7 @@ def handle_component_user(communicate, relay_username, user_username):
                 elif(message.get("stanza") and message.get("stanza") == "message"):
                     print('==========================================')
                     print(f'Menerima packet stanza message dari user')
+                    print(message)
                     target = message.get("to")
                     connection_target = connections.get(target)
                     # Target dalam relay yang sama
