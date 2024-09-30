@@ -21,9 +21,15 @@ from database.sqlite.roster import get_roster_user, rosters as r_db
 from socketClient import SocketClientManager
 # from socketServer import SocketServerManager
 
-module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+try:
+    module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+except:
+    module_socket = import_outside_utils("utils/kelas/", "socketServer.py")
+try:
+    module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+except:
+    module_get_time = import_outside_utils("utils/utility/", "get_time.py")
 SocketServer = module_socket.SocketServer
-module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
 get_timestamp = module_get_time.get_timestamp
 
 u_db.delete_data()

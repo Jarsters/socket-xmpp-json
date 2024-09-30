@@ -21,8 +21,10 @@ from socketClient import SocketClientRelay
         username_user: username_relay
     }
 '''
-
-module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+try:
+    module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+except:
+    module_socket = import_outside_utils("utils/kelas/", "socketServer.py")
 SocketServer = module_socket.SocketServer
 
 dotenv.load_dotenv()

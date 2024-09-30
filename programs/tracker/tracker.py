@@ -11,11 +11,11 @@ try:
     module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
 except:
     module_socket = import_outside_utils("utils/kelas/", "socketServer.py")
-SocketServer = module_socket.SocketServer
 try:
     module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
 except:
     module_get_time = import_outside_utils("utils/utility/", "get_time.py")
+SocketServer = module_socket.SocketServer
 get_timestamp = module_get_time.get_timestamp
 
 delete_components()
