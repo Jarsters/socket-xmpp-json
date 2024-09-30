@@ -13,7 +13,7 @@ from manager_utils.auth import handle_auth
 from manager_utils.packet import get_message, get_message_client, get_message_relay, get_message_tracker, send_message
 from manager_utils.import_abs_path import import_outside_utils
 
-from manager.database.dummy.init_data import socket_user
+from database.dummy.init_data import socket_user
 from database.sqlite.component import components as c_db, convert_components_db, delete_all_data_component_db, delete_components_db_by_id, save_component_to_db, get_relay_with_less_connection_db, update_total_connection
 from database.sqlite.user import get_user_by_username, users as u_db , get_user_online
 from database.sqlite.roster import get_roster_user, rosters as r_db
