@@ -2,36 +2,29 @@ import socket
 import json
 import threading
 
-from database.component import delete_component_by_id, delete_components, get_all, get_components, save_component_to_db
-from utils.get_time import get_timestamp
-from utils.packet import get_message, send_message
+from tracker_utils.import_abs_path import import_outside_utils
+from tracker_utils.packet import get_message, send_message
 
-class SocketServer:
-    def __init__(self, port=5000):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        self.localIP = self.getMyLocalIP()
-        self.socket.bind((self.localIP, port))
-        self.socket.listen()
-    def getMyLocalIP(self):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.connect(("8.8.8.8", 80))
-        output = udp.getsockname()[0]
-        udp.close()
-        del udp
-        return output
+from database.component import delete_component_by_id, delete_components, get_all, get_components, save_component_to_db
+# from tracker_utils.get_time import get_timestamp
+
+module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+SocketServer = module_socket.SocketServer
+module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+get_timestamp = module_get_time.get_timestamp
 
 delete_components()
 
 def delete_component(message, id_component):
-    print("Masuk ke delete component")
     print(message)
     delete_component_by_id(id_component, get_timestamp)
     print(f"Daftar koneksi dalam sistem {get_all()}")
     print("================================================")
+
+def send_connected_components_to_component(communicate):
+    # print(f"Koneksi yang diberikan kepada komponen terkoneksi")
+    print(f"Tracker memberikan komponen yang terkoneksi dengannya kepada komponen yang baru koneksi")
+    send_message(communicate, get_components())
 
 def handleComponent(communicate:socket.socket, msg, id_component):
     error = False
@@ -41,7 +34,8 @@ def handleComponent(communicate:socket.socket, msg, id_component):
             for msg in messages:
                 message = json.loads(msg)
                 if(message.get("message") and message.get("message").lower() == "get components"):
-                    send_message(communicate, get_components())
+                    # send_message(communicate, get_components())
+                    send_connected_components_to_component(communicate)
                 elif(message.get("error_msg")):
                     print(f"Terjadi putus koneksi dengan id_component {id_component}")
                     delete_component(msg, id_component)
@@ -82,11 +76,7 @@ while True:
         if(not ip_is_private or tipe == 'manager' or tipe == 'relay'):
             data = list(message.values())
             id_component = save_component_to_db(data, get_timestamp)
-            # components.append(message)
         print(f"Daftar koneksi dalam sistem {get_all()}\r\n")
-        feedback = get_components()
-        print(f"Koneksi yang diberikan kepada komponen terkoneksi {feedback}")
-        feedback = json.dumps(feedback)
-        connection.send(feedback.encode())
+        send_connected_components_to_component(connection)
         threading.Thread(target=handleComponent, args=(connection, message, id_component), daemon=True).start()
         print("================================================")

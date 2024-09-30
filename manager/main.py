@@ -1,80 +1,44 @@
-import socket
 import json
 import threading
-from string import printable, digits, punctuation
+from string import printable
 from random import randint
 import ipaddress
+import dotenv
+import os
 
-from utils.get_time import get_timestamp
-from utils.presence import get_presence_by_jid, init_presence, logout, send_presence_to_someone, set_my_bio
-from utils.roster import delete_roster, get_packet_subscribed_for_init_entity, get_packet_unsubscribed_for_init_entity, get_rosters, set_roster
-from utils.auth import handle_auth
-from utils.packet import get_message, get_message_client, get_message_relay, get_message_tracker, send_message
+# from manager_utils.get_time import get_timestamp
+from manager_utils.presence import get_presence_by_jid, init_presence, logout, send_presence_to_someone, set_my_bio
+from manager_utils.roster import delete_roster, get_packet_subscribed_for_init_entity, get_packet_unsubscribed_for_init_entity, get_rosters, set_roster
+from manager_utils.auth import handle_auth
+from manager_utils.packet import get_message, get_message_client, get_message_relay, get_message_tracker, send_message
+from manager_utils.import_abs_path import import_outside_utils
 
-from database.dummy.init_data import socket_user
+from manager.database.dummy.init_data import socket_user
 from database.sqlite.component import components as c_db, convert_components_db, delete_all_data_component_db, delete_components_db_by_id, save_component_to_db, get_relay_with_less_connection_db, update_total_connection
 from database.sqlite.user import get_user_by_username, users as u_db , get_user_online
 from database.sqlite.roster import get_roster_user, rosters as r_db
+
+from socketClient import SocketClientManager
+# from socketServer import SocketServerManager
+
+module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+SocketServer = module_socket.SocketServer
+module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+get_timestamp = module_get_time.get_timestamp
 
 u_db.delete_data()
 c_db.delete_data()
 r_db.delete_data()
 
-class SocketClient:
-    def __init__(self, ip_target, port_target, tipe=None):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        if(not ip_target):
-            ip_target = self.getMyLocalAddress()[0]
-        self.address_target = (ip_target, port_target)
-        self.localAddress = self.getMyLocalAddress()
-        print(f"Try to connecting.... {ip_target} - {port_target} ({tipe})")
-        self.connectToTarget()
-        print("Connected")
-    def connectToTarget(self):
-        try: 
-            self.socket.connect(self.address_target)
-        except Exception as e:
-            print(e)
-            print("Error when connecting....")
-            print("Quit program")
-            self.socket.close()
-            exit()
-    def getMyLocalAddress(self):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.connect(("8.8.8.8", 80))
-        output = udp.getsockname()
-        udp.close()
-        del udp
-        return output
-
-class SocketServer:
-    def __init__(self, port=5000):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        self.localIP = self.getMyLocalIP()
-        self.socket.bind((self.localIP, port))
-        self.socket.listen()
-    def getMyLocalIP(self):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.connect(("8.8.8.8", 80))
-        output = udp.getsockname()[0]
-        udp.close()
-        del udp
-        return output
+dotenv.load_dotenv()
+IP_TRACKER = os.getenv("IP_TRACKER")
 
 def connect_to_tracker():
     ask = input("Local (y/n)?")
     if(ask.lower() == 'y'):
-        client_tracker = SocketClient(None, 5000, tipe="Tracker")
+        client_tracker = SocketClientManager(None, 5000, tipe="Tracker")
     else:
-        client_tracker = SocketClient("103.178.153.189", 5000, tipe="Tracker")
+        client_tracker = SocketClientManager(IP_TRACKER, 5000, tipe="Tracker")
     # ct = Client Tracker
     ct = client_tracker.socket
     my_ip = client_tracker.localAddress
@@ -105,7 +69,8 @@ def lost_connection(reason, tipe, username_relay, username):
         # Menghapus koneksi dari user
         del socket_user[username]
         # Konfigurasi user yang logout atau mengalami error
-        logout(socket_user, username)
+        timestamp = get_timestamp()
+        logout(socket_user, username, timestamp)
         # lockWhile.release()
     # print("Connection end...")
 
@@ -127,19 +92,19 @@ def handle_component(communicate, tipe, username_relay):
             for msg in messages:
                 with lockThread:
                     message = json.loads(msg)
-                    if(message.get("message") != "ecir"):
-                        print(message)
+                    # if(message.get("message") != "ecir"):
+                    print(message)
                     if(message.get("error_msg")):
                         error = True
                         if(tipe == "relay"):
                             print(f"Komponen relay dengan username {username_relay} mengalami error....")
-                            # delete_components_db_by_id(c_db, tuple_condition=username_relay)
                             lost_connection(message.get("tipe"), tipe, username_relay, None)
                             break
                         elif(tipe == 'client'):
                             if(username):
                                 print(f"Komponen client dengan username {username} mengalami error....")
-                                logout(socket_user, username)
+                                # logout(socket_user, username, timestamp)
+                                lost_connection("Menerima 'error_msg'", tipe, username_relay, username)
                             else:
                                 print(f"Komponen client dengan username \"tanpa username\" mengalami error....")
                                 error = True
@@ -149,7 +114,7 @@ def handle_component(communicate, tipe, username_relay):
                         username = message.get("username")
                         socket_user[username] = communicate
 
-                    # Ketika mau login atau belum online, kalo udah online minta get_relay_less_connection aja
+                    # Ketika mau login dan belum online, kalo udah online minta get_relay_less_connection aja
                     if(tipe == "client" and message.get("type") == "auth" and not get_user_online(username)):
                         print("=========================================")
                         print("AUTH")
@@ -242,7 +207,6 @@ def handle_component(communicate, tipe, username_relay):
                                 print(f"Terjadi error saat user {username} melakukan permintaan menghapus roster item")
                             # Mengirimkan hasil dari menghapus roster item kepada user pengirim
                             send_message(communicate, objek)
-                        # print("Lewatin semua kok")
                         print("=========================================")
 
                     # Mengelola yang berkaitan dengan presence
@@ -252,11 +216,13 @@ def handle_component(communicate, tipe, username_relay):
                         # Mengelola init presence
                         if(not message.get('type') and not message.get("bio") and not message.get("to")):
                             print(f"Terjadi permintaan init presence dari user dengan username {username}")
-                            init_presence(socket_user, username)
+                            timestamp = get_timestamp()
+                            init_presence(socket_user, username, timestamp)
                         # Mengelola ketika user memperbarui bio-nya
                         elif(message.get('bio')):
                             print(f"Terjadi permintaan perubahan bio dari user dengan username {username}")
-                            set_my_bio(socket_user, username, message)
+                            timestamp = get_timestamp()
+                            set_my_bio(socket_user, username, message, timestamp)
                         # Mengelola ketika user membuat permintaan directed presence
                         elif(message.get('to')):
                             jid_target = message.get('to')
@@ -280,7 +246,9 @@ def handle_component(communicate, tipe, username_relay):
                         # Mengelola ketika user membuat permintaan presence tipe "unavailable" atau logout
                         elif(message.get('type') == 'unavailable'):
                             print(f"Terjadi permintaan presence bertipe 'unavailable' dari user {username}")
-                            logout(socket_user, username)
+                            # timestamp = get_timestamp()
+                            # logout(socket_user, username, timestamp)
+                            lost_connection("Memberikan presence tipe unavailable", tipe, username_relay, username)
                             error = True
                         print("=========================================")
                     # if(tipe == "client"):
@@ -300,6 +268,7 @@ def handle_component(communicate, tipe, username_relay):
 
 ct, my_address = connect_to_tracker()
 
+# m = SocketServerManager(my_address[1])
 m = SocketServer(my_address[1])
 manager = m.socket
 
@@ -314,17 +283,14 @@ def generate_username(w):
     return result
 
 # Fungsi validasi untuk username relay, untuk memastikan bahwa username akan unik
-def random_username_for_relay(c_db):
-    '''
-    ### Jika mau diimplementasiin logic, 
-    ### jika ip address dan port yang sama sudah terdaftar maka tidak boleh menjadi relay
+def random_username_for_relay(c_db, data):
+    ## Jika mau diimplementasiin logic, 
+    ## jika ip address dan port yang sama sudah terdaftar maka tidak boleh menjadi relay
     # Mengecek validitas bahwa ip address dan port belum terdaftar sebagai relay
-    # check_validity_ip_and_port = not c_db.get_all_with_limit(1, ['ip_address', 'port'], (data.get("ip_address"), data.get("port")), ['AND'])
-    # if(not check_validity_ip_and_port):
-    #     return False
-    '''
+    check_validity_ip_and_port = not c_db.get_all_with_limit(1, ['ip_address', 'port'], (data.get("ip_local"), data.get("port")), ['AND'])
+    if(not check_validity_ip_and_port):
+        return False
     # printable, digits, dan punctuation dari library string
-    # letter = printable + digits + punctuation
     letter = printable
     while True:
         username_relay = generate_username(letter)
@@ -356,20 +322,16 @@ while True:
             if(message.get("type").lower() == "relay"):
                 print("KONFIGURASI RELAY")
                 # print(f'RELAY MESSAGE: {msg}')
-                # username_relay = random_username_for_relay(c_db, message)
-                username_relay = random_username_for_relay(c_db)
-                '''
-                ### Jika mau diimplementasiin logic, 
+                username_relay = random_username_for_relay(c_db, message)
                 ### jika ip address dan port yang sama sudah terdaftar maka tidak boleh menjadi relay
-                # if(not username_relay):
-                #     obj_error = {
-                #         "error_msg": True,
-                #         "msg": "IP address dan port sudah terdaftar",
-                #         "error-type": "bad request"
-                #     }
-                #     send_message(connection, obj_error)
-                #     continue
-                '''
+                if(not username_relay):
+                    obj_error = {
+                        "error_msg": True,
+                        "msg": "IP address dan port sudah terdaftar",
+                        "error-type": "bad request"
+                    }
+                    send_message(connection, obj_error)
+                    continue
                 # Konfigurasi awal relay
                 config_new_relay(message, username_relay)
                 # Mengambil semua data komponen yang terkoneksi dengan manager

@@ -1,5 +1,5 @@
 import sqlite3
-from utils.get_time import get_timestamp
+from tracker_utils.get_time import get_timestamp
 
 class SQL():
     def __init__(self, table_name, columns_table, type_of_columns, \
@@ -116,18 +116,6 @@ class SQL():
         res = res.fetchall()
         self.close_connection(connection)
         return res
-    
-    # def get_one(self, column_condition=None, tuple_condition=None, boolean_condition=None):
-    #     connection, cursor = self.open_connection()
-    #     cmd = f"SELECT * FROM {self.table_name}"
-    #     if(tuple_condition):
-    #         cmd += f" WHERE {self.helper_set_condition(column_condition, boolean_condition)}"
-    #         res = cursor.execute(cmd, tuple_condition)
-    #     else:    
-    #         res = cursor.execute(cmd)
-    #     res = res.fetchone()
-    #     self.close_connection(connection)
-    #     return res
     
     def get_all_with_limit(self, limit=1, column_condition=None, tuple_condition=None, boolean_condition=None):
         connection, cursor = self.open_connection()

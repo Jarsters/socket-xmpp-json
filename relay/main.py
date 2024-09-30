@@ -1,13 +1,17 @@
-import socket
 import json
 import time
 import ipaddress
 import threading
+import dotenv
+import os
 
-from utils.message import send_message_to_target, send_packet_error
-from utils.packet import get_message, get_message_manager, get_message_relay, get_message_tracker, get_message_user, send_message
+from relay_utils.import_abs_path import import_outside_utils
+from relay_utils.message import send_message_to_target, send_packet_error
+from relay_utils.packet import get_message, get_message_manager, get_message_relay, get_message_tracker, get_message_user, send_message
 from database.init_data import my_username, connection_relay, user_in_another_relay, relay_to_tracker\
                             , my_ip, r, relay, s2, relay_to_manager, connections
+# from socketServer import SocketServerRelay
+from socketClient import SocketClientRelay
 
 '''
     Relay connection_relay = {
@@ -18,65 +22,19 @@ from database.init_data import my_username, connection_relay, user_in_another_re
     }
 '''
 
-class SocketClient:
-    def __init__(self, ip_target, port_target, relay=False, tipe=None):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        if(not ip_target):
-            ip_target = self.getMyLocalAddress()[0]
-        self.address_target = (ip_target, port_target)
-        self.localAddress = self.getMyLocalAddress()
-        print(f"Try to connecting.... {ip_target} - {port_target} ({tipe})")
-        res = self.connectToTarget(relay)
-        print("Connected")
-    def connectToTarget(self, relay):
-        try: 
-            self.socket.connect(self.address_target)
-            return True
-        except Exception as e:
-            print(e)
-            print("Error when connecting....")
-            print("Quit program")
-            self.socket.close()
-            if(not relay):
-                exit()
-            return False
-    def getMyLocalAddress(self):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.connect(("8.8.8.8", 80))
-        output = udp.getsockname()
-        udp.close()
-        del udp
-        return output
+module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+SocketServer = module_socket.SocketServer
 
-class SocketServer:
-    def __init__(self, port=5000):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        self.localIP = self.getMyLocalIP()
-        self.socket.bind((self.localIP, port))
-        self.socket.listen()
-    def getMyLocalIP(self):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.connect(("8.8.8.8", 80))
-        output = udp.getsockname()[0]
-        udp.close()
-        del udp
-        return output
+dotenv.load_dotenv()
+IP_TRACKER = os.getenv("IP_TRACKER")
 
 # Fungsionalitas terhubung ke tracker
 def connect_to_tracker():
     ask = input("Local (y/n)?")
     if(ask.lower() == 'y'):
-        client_tracker = SocketClient(None, 5000, tipe="Tracker")
+        client_tracker = SocketClientRelay(None, 5000, tipe="Tracker")
     else:
-        client_tracker = SocketClient("103.178.153.189", 5000, tipe="Tracker")
+        client_tracker = SocketClientRelay(IP_TRACKER, 5000, tipe="Tracker")
     # ct = Client Tracker
     ct = client_tracker.socket
     my_ip = client_tracker.localAddress
@@ -148,14 +106,8 @@ def handle_component_relay(communicate, connected_relay_username):
     error = False
     while not error:
         messages = get_message_relay(communicate)
-        # print([json.loads(msg) if msg else "kosong" for msg in messages])
-        # print("diatas")
-        # # time.sleep(2)
         for msg in messages:
-            # print("Masuk ke sini")
-            # time.sleep(2)
             message = json.loads(msg)
-            # time.sleep(2)
             # Menangani jika tiba-tiba mengalami error atau terputus untuk komponen relay
             if(message.get("error_msg")):
                 print('==========================================')
@@ -220,9 +172,6 @@ def handle_component_relay(communicate, connected_relay_username):
                 print('==========================================')
                 print("Relay mendapatkan packet nilai success 1 dan nilai activity 'messsage from another relay'")
                 print(message)
-                # initiate_user = message.get("from")
-                # communicate = connections[initiate_user]
-                # send_packet_error(communicate, 404, initiate_user)
                 print('==========================================')
             else:
                 continue
@@ -231,7 +180,7 @@ def handle_component_relay(communicate, connected_relay_username):
 def connect_to_another_relay(ip, port, uname):
     print("Melakukan koneksi dengan relay lainnya")
     # print(f"IP {ip}; PORT {port}")
-    connection_with_another_relay = SocketClient(ip, port, relay=True, tipe="Relay")
+    connection_with_another_relay = SocketClientRelay(ip, port, relay=True, tipe="Relay")
     # cwar = Client With Another Relay
     cwar = connection_with_another_relay.socket
     my_ip = connection_with_another_relay.localAddress
@@ -247,12 +196,10 @@ def connect_to_another_relay(ip, port, uname):
     
     send_message(cwar, objek)   
     messages = get_message_relay(cwar)
-    # print("Masuk messages")
     for msg in messages:
         msg = json.loads(msg)
         print(f"Pesan dari relay senior: {msg}")
         if(msg.get("error_msg")):
-            print("Masuk error")
             return False, False, False
         usernames_in_another_relay = msg.get("username_users")
         username_relay = msg.get("relay_username")
@@ -298,7 +245,7 @@ while not s2:
     if(target):
         ip = target.get("ip_local")
         port = target.get("port")
-        s2 = SocketClient(ip, port, tipe="Manager")
+        s2 = SocketClientRelay(ip, port, tipe="Manager")
         relay_to_manager = s2.socket
         my_ip = s2.localAddress
         ip_is_private = ipaddress.ip_address(my_ip[0]).is_private
@@ -316,6 +263,7 @@ while not s2:
             # Melakukan konfigurasi awal saat relay pertama kali online, dengan daftar komponen yang diberikan oleh manager
             config_starter_relay(msg_from_manager)
             my_port = my_ip[1]
+            # r = SocketServerRelay(my_port)
             r = SocketServer(my_port)
             relay = r.socket
     if(not s2 or not len(message)):

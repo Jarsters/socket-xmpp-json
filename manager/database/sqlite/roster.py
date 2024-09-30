@@ -29,12 +29,12 @@ def save_rosters(roster: list, timestamp):
     column = None
     roster.append(timestamp)
     roster.append(timestamp)
-    print(f"PANJANG ROSTER: {len(roster)}")
+    # print(f"PANJANG ROSTER: {len(roster)}")
     if(len(roster) == 5):
         column = ['id_owner_roster', 'jid', 'subscription', 'created_at', 'updated_at']
     elif(len(roster) == 6):
         column = ['id_owner_roster', 'jid', 'name', 'subscription', 'created_at', 'updated_at']
-    print(f"COLUMN: {column}, {roster}")
+    # print(f"COLUMN: {column}, {roster}")
     res = rosters.insert_to_table(column, roster)
     print(res)
     return res
@@ -46,7 +46,7 @@ def get_rosters_user(username, data_subscription_tuple):
     data = (username,) + data_subscription_tuple
     res = rosters.get_with_query(query, data)
     res = set_to_be_format(res)
-    print(f"RES GR_DB: {res}")
+    print(f"RES GET ROSTERS_DB: {res}")
     return res
 
 # Fungsionalitas membaca database untuk data jid, name, dan subscriptionnya, berdasarkan kondisi id_owner_roster dan jid-nya.

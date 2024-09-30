@@ -1,44 +1,16 @@
 import os
-import socket
 import json
 import time
 import ipaddress
 import threading
 
-# from database.dummy.init import get_target_from_my_roster
-from utils.presence import get_presence_target, init_presence, logout, update_presence, view_users_presence
-from utils.roster import add_roster, delete_roster, get_my_roster, update_roster, see_my_rosters
-from utils.communicate_with_another_component import handle_message_from_manager, handle_message_from_relay
-from utils.message import send_message_to_relay
-from utils.packet import get_message_manager, get_message_relay, get_message_tracker, send_message
+from user_utils.presence import get_presence_target, init_presence, logout, update_presence, view_users_presence
+from user_utils.roster import add_roster, delete_roster, get_my_roster, update_roster, see_my_rosters
+from user_utils.communicate_with_another_component import handle_message_from_manager, handle_message_from_relay
+from user_utils.message import send_message_to_relay
+from user_utils.packet import get_message_manager, get_message_tracker, send_message
 
-class SocketClient:
-    def __init__(self, ip_target, port_target):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if(not ip_target):
-            ip_target = self.getMyLocalAddress()[0]
-        self.address_target = (ip_target, port_target)
-        self.localAddress = self.getMyLocalAddress()
-        print(f"Try to connecting.... {ip_target} - {port_target}")
-        self.connectToTarget()
-        print("Connected")
-    def connectToTarget(self):
-        try: 
-            self.socket.connect(self.address_target)
-        except Exception as e:
-            print(e)
-            print("Error when connecting....")
-            print("Quit program")
-            self.socket.close()
-            exit()
-    def getMyLocalAddress(self):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.connect(("8.8.8.8", 80))
-        output = udp.getsockname()
-        udp.close()
-        del udp
-        return output
+from socketClient import SocketClient
 
 def connect_to_tracker():
     ask = input("Local (y/n)?")
@@ -57,10 +29,7 @@ def connect_to_tracker():
         "type": "client",
         "is_private": ip_is_private
     }
-
-    # stringObjek = json.dumps(objek)
-
-    # ct.send(stringObjek.encode())
+    
     send_message(ct, objek)
     message = get_message_tracker(ct)
     # message = json.loads(message)
@@ -202,12 +171,6 @@ client_to_relay = None
 s3, username = connect_to_relay(message, s3, client_to_manager)
 
 client_to_relay = s3.socket
-# objek = {"msg": "Hello relay!"}
-# send_message(client_to_relay, objek)
-# print(get_message_relay(client_to_relay))
-# messages = get_message_relay(client_to_relay)
-# for msg in messages:
-#     print(json.loads(msg))
 
 threading.Thread(target=handle_message_from_relay, args=(client_to_relay, ), daemon=True).start()
 threading.Thread(target=handle_message_from_manager, args=(client_to_manager, ), daemon=True).start()
