@@ -3,7 +3,10 @@ import sqlite3
 from manager_utils.import_abs_path import import_outside_utils
 # from manager_utils.get_time import get_timestamp
 
-module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+try:
+    module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+except:
+    module_get_time = import_outside_utils("utils/utility/", "get_time.py")
 get_timestamp = module_get_time.get_timestamp
 
 class SQL():
