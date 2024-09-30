@@ -26,12 +26,13 @@ try:
 except:
     print("Masuk except manager 1")
     module_socket = import_outside_utils("utils/kelas/", "socketServer.py")
+print("Lewat 1")
+SocketServer = module_socket.SocketServer
 try:
     module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
 except:
     print("Masuk except manager 2")
     module_get_time = import_outside_utils("utils/utility/", "get_time.py")
-SocketServer = module_socket.SocketServer
 get_timestamp = module_get_time.get_timestamp
 
 u_db.delete_data()
