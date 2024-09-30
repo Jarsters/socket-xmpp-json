@@ -6,7 +6,10 @@ import re
 from database.sqlite.component import get_relay_with_less_connection_db
 from database.sqlite.user import get_user_by_username, save_user_to_db, update_status_online, get_all_users
 
-module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+try:
+    module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+except:
+    module_get_time = import_outside_utils("utils/utility/", "get_time.py")
 get_timestamp = module_get_time.get_timestamp
 
 # Fungsionalitas untuk menyimpan data user yang baru registrasi
