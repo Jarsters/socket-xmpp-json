@@ -10,10 +10,12 @@ from database.component import delete_component_by_id, delete_components, get_al
 try:
     module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
 except:
+    print("Masuk except 1")
     module_socket = import_outside_utils("utils/kelas/", "socketServer.py")
 try:
     module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
 except:
+    print("Masuk except 2")
     module_get_time = import_outside_utils("utils/utility/", "get_time.py")
 SocketServer = module_socket.SocketServer
 get_timestamp = module_get_time.get_timestamp
