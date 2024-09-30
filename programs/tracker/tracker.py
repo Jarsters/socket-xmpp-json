@@ -7,10 +7,15 @@ from tracker_utils.packet import get_message, send_message
 
 from database.component import delete_component_by_id, delete_components, get_all, get_components, save_component_to_db
 # from tracker_utils.get_time import get_timestamp
-
-module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+try:
+    module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
+except:
+    module_socket = import_outside_utils("utils/kelas/", "socketServer.py")
 SocketServer = module_socket.SocketServer
-module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+try:
+    module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
+except:
+    module_get_time = import_outside_utils("utils/utility/", "get_time.py")
 get_timestamp = module_get_time.get_timestamp
 
 delete_components()
