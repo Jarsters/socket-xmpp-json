@@ -1,4 +1,5 @@
 from user_utils.packet import send_message
+from user_utils.get_time import get_timestamp
 
 def send_message_to_relay(communicate, *args):
     '''
@@ -8,7 +9,8 @@ def send_message_to_relay(communicate, *args):
         from: initiate_entity,
         to: receiver_entity,
         lang: "id", # Indonesian
-        body: main_of_message
+        body: main_of_message,
+        time_send: Timestamp
     }
     '''
     packet = {
@@ -16,8 +18,10 @@ def send_message_to_relay(communicate, *args):
         "from": args[0],
         "to": args[1],
         "lang": "id",
-        "body": args[2]
+        "body": args[2],
+        "time_send": get_timestamp()
     }
+    print(f"PACKET MESSAGE {packet}")
     send_message(communicate, packet)
 
 '''

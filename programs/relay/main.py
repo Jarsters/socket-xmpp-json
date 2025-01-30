@@ -5,12 +5,12 @@ import threading
 import dotenv
 import os
 
+from database.sqlite.messages import save_message_to_db
 from relay_utils.import_abs_path import import_outside_utils
 from relay_utils.message import send_message_to_target, send_packet_error
 from relay_utils.packet import get_message, get_message_manager, get_message_relay, get_message_tracker, get_message_user, send_message
 from database.init_data import my_username, connection_relay, user_in_another_relay, relay_to_tracker\
                             , my_ip, r, relay, s2, relay_to_manager, connections
-# from socketServer import SocketServerRelay
 from socketClient import SocketClientRelay
 
 '''
@@ -61,10 +61,6 @@ def get_manager(communicate):
     objek = {"message": "get components"}
     send_message(communicate, objek)
     return get_message_tracker(communicate)
-
-s, message = connect_to_tracker()
-relay_to_tracker = s.socket
-my_ip = s.localAddress
 
 # Fungsionalitas menyimpan koneksi relay ke dalam daftar connection_relay
 def config_new_relay(uname, communicate):
@@ -150,7 +146,7 @@ def handle_component_relay(communicate, connected_relay_username):
                 user_in_another_relay[username_user] = relay_uname
                 print(f"User didalam relay {relay_uname} adalah {user_in_another_relay}")
                 print('==========================================')
-            # Mengelola packet dengan nilai message "new user"
+            # Mengelola packet dengan nilai message "end user"
             elif(message.get("message") and message.get("message").lower() == "end user"):
                 print('==========================================')
                 print("Relay mendapatkan pesan 'end user' dari relay lainnya")
@@ -236,44 +232,6 @@ def config_starter_relay(m): # m = message_from_manager
     print(f"User in Another Relay Konfigurasi: {user_in_another_relay}")
     print("==========================================")
 
-
-# Connect ke manager
-while not s2:
-    target = None
-    for m in message:
-        if(m.get("type").lower() == "manager"):
-            target = m
-            break
-    if(target):
-        ip = target.get("ip_local")
-        port = target.get("port")
-        s2 = SocketClientRelay(ip, port, tipe="Manager")
-        relay_to_manager = s2.socket
-        my_ip = s2.localAddress
-        ip_is_private = ipaddress.ip_address(my_ip[0]).is_private
-        objek = {
-            "ip_local": my_ip[0],
-            "port": my_ip[1],
-            "type": "relay"
-        }
-        send_message(relay_to_manager, objek)
-        messages = get_message_manager(relay_to_manager)
-        for msg in messages:
-            msg_from_manager = json.loads(msg)
-            print(f"Pesan dari manager: {msg_from_manager}")
-            print("==========================================")
-            # Melakukan konfigurasi awal saat relay pertama kali online, dengan daftar komponen yang diberikan oleh manager
-            config_starter_relay(msg_from_manager)
-            my_port = my_ip[1]
-            # r = SocketServerRelay(my_port)
-            r = SocketServer(my_port)
-            relay = r.socket
-    if(not s2 or not len(message)):
-        print("Belum ada manager!")
-        time.sleep(10)
-        # Meminta manager kepada tracker
-        message = get_manager(relay_to_tracker)
-
 # Fungsionalitas mengelola komponen user
 def handle_component_user(communicate, relay_username, user_username):
     global relay_to_manager, connection_relay, user_in_another_relay
@@ -292,7 +250,13 @@ def handle_component_user(communicate, relay_username, user_username):
                     print('==========================================')
                     print(f'Menerima packet stanza message dari user')
                     print(message)
+                    # Saving message to database
+                    initiator = message.get("from")
                     target = message.get("to")
+                    message_s = message.get("body")
+                    time_send = message.get("time_send")
+                    save_message_to_db([initiator, target, message_s, time_send])
+                    # End saving message to database
                     connection_target = connections.get(target)
                     # Target dalam relay yang sama
                     if(connection_target): 
@@ -337,6 +301,47 @@ def handle_component_user(communicate, relay_username, user_username):
             # objek[tipe]
             send_message(relay_to_manager, objek)
             break
+
+s, message = connect_to_tracker()
+relay_to_tracker = s.socket
+my_ip = s.localAddress
+
+# Connect ke manager
+while not s2:
+    target = None
+    for m in message:
+        if(m.get("type").lower() == "manager"):
+            target = m
+            break
+    if(target):
+        ip = target.get("ip_local")
+        port = target.get("port")
+        s2 = SocketClientRelay(ip, port, tipe="Manager")
+        relay_to_manager = s2.socket
+        my_ip = s2.localAddress
+        ip_is_private = ipaddress.ip_address(my_ip[0]).is_private
+        objek = {
+            "ip_local": my_ip[0],
+            "port": my_ip[1],
+            "type": "relay"
+        }
+        send_message(relay_to_manager, objek)
+        messages = get_message_manager(relay_to_manager)
+        for msg in messages:
+            msg_from_manager = json.loads(msg)
+            print(f"Pesan dari manager: {msg_from_manager}")
+            print("==========================================")
+            # Melakukan konfigurasi awal saat relay pertama kali online, dengan daftar komponen yang diberikan oleh manager
+            config_starter_relay(msg_from_manager)
+            my_port = my_ip[1]
+            # r = SocketServerRelay(my_port)
+            r = SocketServer(my_port)
+            relay = r.socket
+    if(not s2 or not len(message)):
+        print("Belum ada manager!")
+        time.sleep(10)
+        # Meminta manager kepada tracker
+        message = get_manager(relay_to_tracker)
 
 # Fungsionalitas untuk menerima segala koneksi TCP yang ingin terkoneksi dengan dirinya
 while True:

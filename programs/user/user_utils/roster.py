@@ -1,4 +1,4 @@
-from database.dummy.init import get_target_from_my_roster, my_roster
+from database.init import get_target_from_my_roster, my_roster
 from user_utils.packet import send_message
 
 
@@ -52,6 +52,7 @@ def delete_roster(objek_roster, client_to_manager):
     objek_roster["type"] = "set"
     objek_roster["query"] = {"item": item}
     objek_roster["subscription"] = "remove"
+    print(f"OBJEK ROSTER DELETE: {objek_roster}")
     send_message(client_to_manager, objek_roster)
     del objek_roster["type"]
     del objek_roster["query"]

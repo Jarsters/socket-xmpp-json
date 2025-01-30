@@ -1,4 +1,4 @@
-from database.dummy.init import delete_from_my_roster, save_single_roster, save_to_my_rosters, save_to_users_presence, user_presence_unavailable
+from database.init import delete_from_my_roster, save_single_roster, save_to_my_rosters, save_to_users_presence, user_presence_unavailable
 from user_utils.packet import get_message_manager, get_message_relay
 import json
 
@@ -51,7 +51,7 @@ def handle_message_from_manager(communicate):
                     # print("Masuk unavailable presence")
                     user_presence_unavailable(message)
                 elif(message.get('stanza') == 'presence'):
-                    # print("Masuk init presence")
+                    print("Masuk saving presence")
                     save_to_users_presence(message)
                 print(f"Manager: {message}")
         except Exception as e:

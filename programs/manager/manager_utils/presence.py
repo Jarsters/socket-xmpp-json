@@ -64,7 +64,7 @@ def init_presence(socket_user, username, timestamp):
     objek_presence = get_presence_by_jid(username)
     if(roster_db_from):
         send_to_roster_subscription_from(roster_db_from, socket_user, objek_presence)
-    if(roster_db_from):
+    if(roster_db_to):
         get_presence_entity_subscription_to(roster_db_to, socket_user, username)
 
 # Fungsionalitas untuk mendapatkan presence dari jid yang diinginkan

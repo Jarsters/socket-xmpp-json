@@ -100,7 +100,7 @@ def handle_auth(message, communicate, user_db=None, f=None):
             send_message(communicate, objek)
             return False
         password_db = user[1]
-        if(user[3]):
+        if(user[3]): # Cek status online
             if(not password == password_db):
                 print(f"Terjadi error karena password tidak sesuai")
                 # Pembuatan packet untuk pemberitahuan kepada user bahwa login gagal

@@ -6,7 +6,6 @@ import ipaddress
 import dotenv
 import os
 
-# from manager_utils.get_time import get_timestamp
 from manager_utils.presence import get_presence_by_jid, init_presence, logout, send_presence_to_someone, set_my_bio
 from manager_utils.roster import delete_roster, get_packet_subscribed_for_init_entity, get_packet_unsubscribed_for_init_entity, get_rosters, set_roster
 from manager_utils.auth import handle_auth
@@ -14,22 +13,22 @@ from manager_utils.packet import get_message, get_message_client, get_message_re
 from manager_utils.import_abs_path import import_outside_utils
 
 from database.dummy.init_data import socket_user
-from database.sqlite.component import components as c_db, convert_components_db, delete_all_data_component_db, delete_components_db_by_id, save_component_to_db, get_relay_with_less_connection_db, update_total_connection
+from database.sqlite.component import components as c_db, convert_components_db, delete_all_data_component_db,\
+      delete_components_db_by_id, save_component_to_db, get_relay_with_less_connection_db, update_total_connection
 from database.sqlite.user import get_user_by_username, users as u_db , get_user_online
 from database.sqlite.roster import get_roster_user, rosters as r_db
 
 from socketClient import SocketClientManager
-# from socketServer import SocketServerManager
 
 try:
     module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
 except:
-    print("Masuk except 1")
+    # print("Masuk except 1")
     module_socket = import_outside_utils("utils/kelas/", "socketServer.py")
 try:
     module_get_time = import_outside_utils("utils\\utility\\", "get_time.py")
 except:
-    print("Masuk except 2")
+    # print("Masuk except 2")
     module_get_time = import_outside_utils("utils/utility/", "get_time.py")
 SocketServer = module_socket.SocketServer
 get_timestamp = module_get_time.get_timestamp
@@ -75,12 +74,11 @@ def lost_connection(reason, tipe, username_relay, username):
         delete_components_db_by_id(c_db, tuple_condition=username_relay)
     if(username):
         # Menghapus koneksi dari user
+        socket_user[username].close()
         del socket_user[username]
         # Konfigurasi user yang logout atau mengalami error
         timestamp = get_timestamp()
         logout(socket_user, username, timestamp)
-        # lockWhile.release()
-    # print("Connection end...")
 
 lockThread = threading.Lock()
 # lockWhile = threading.Lock()
@@ -90,7 +88,8 @@ def handle_component(communicate, tipe, username_relay):
     error = False
     while not error:
         # if(tipe == "client"):
-        #     lockWhile.acquire()
+            # lockWhile.acquire()
+        print("Diatas lockThread")
         try:
             messages = None
             if(tipe == "relay"):
@@ -99,6 +98,7 @@ def handle_component(communicate, tipe, username_relay):
                 messages = get_message_client(communicate)
             for msg in messages:
                 with lockThread:
+                    print("Dibawah lockThread")
                     message = json.loads(msg)
                     # if(message.get("message") != "ecir"):
                     print(message)
@@ -118,17 +118,18 @@ def handle_component(communicate, tipe, username_relay):
                                 error = True
                                 # lockWhile.release()
                             break
-                    elif(message.get("username")):
-                        username = message.get("username")
-                        socket_user[username] = communicate
 
                     # Ketika mau login dan belum online, kalo udah online minta get_relay_less_connection aja
-                    if(tipe == "client" and message.get("type") == "auth" and not get_user_online(username)):
+                    # print(f"Diatas AUTH: {get_user_online(username)}, Username: {username}")
+                    if(tipe == "client" and message.get("type") == "auth"):
                         print("=========================================")
                         print("AUTH")
                         result = handle_auth(message, communicate, u_db, get_relay_with_less_connection_db)
                         if(not result):
                             username = None
+                        else:
+                            username = message.get("username")
+                            socket_user[username] = communicate
                         print("=========================================")
                         # continue
 
@@ -165,7 +166,7 @@ def handle_component(communicate, tipe, username_relay):
                     # Mengelola yang berkaitan dengan roster
                     elif(message.get("stanza") and message.get("stanza").lower() == "iq" and message.get("namespace") and message.get("namespace").lower() == "roster"):
                         print("=========================================")
-                        print("IQ, ROSTER")
+                        print("IQ, ROSTER, MESSAGE", message)
                         # Mengelola user yang meminta rosternya
                         if(message.get("type") and message.get("type").lower()  == "get"):
                             print(f"Terjadi permintaan mendapatkan roster dari user {username}")
@@ -254,13 +255,11 @@ def handle_component(communicate, tipe, username_relay):
                         # Mengelola ketika user membuat permintaan presence tipe "unavailable" atau logout
                         elif(message.get('type') == 'unavailable'):
                             print(f"Terjadi permintaan presence bertipe 'unavailable' dari user {username}")
-                            # timestamp = get_timestamp()
-                            # logout(socket_user, username, timestamp)
                             lost_connection("Memberikan presence tipe unavailable", tipe, username_relay, username)
                             error = True
                         print("=========================================")
                     # if(tipe == "client"):
-                    #     lockWhile.release()
+                        # lockWhile.release()
         except ConnectionAbortedError as e:
             lost_connection(e, tipe, username_relay, username)
             break
@@ -273,14 +272,6 @@ def handle_component(communicate, tipe, username_relay):
         except Exception as e:
             lost_connection(e, tipe, username_relay, username)
             break
-
-ct, my_address = connect_to_tracker()
-
-# m = SocketServerManager(my_address[1])
-m = SocketServer(my_address[1])
-manager = m.socket
-
-print("Manager listening...")
 
 # Fungsi untuk menghasilkan username untuk relay yang baru terkoneksi sepanjang 10 karakter
 def generate_username(w):
@@ -315,23 +306,25 @@ def config_new_relay(msg, uname):
     # Menyimpan relay baru ke dalam database
     save_component_to_db(list(msg.values()), get_timestamp)
 
+ct, my_address = connect_to_tracker()
+m = SocketServer(my_address[1])
+manager = m.socket
+
+print("Manager listening...")
+
 # Fungsionalitas untuk menerima setiap koneksi yang baru terhubung dengan manager
 while True:
     try:
         connection, address = manager.accept()
-        # Fungsionalitas penerimaan pesan
         messages = get_message(connection)
         for msg in messages:
             message = json.loads(msg)
             print("===================================================")
             print(message)
             username_relay = None
-            # Metode yang dilakukan jika koneksi yang baru bertipe relay
             if(message.get("type").lower() == "relay"):
                 print("KONFIGURASI RELAY")
-                # print(f'RELAY MESSAGE: {msg}')
                 username_relay = random_username_for_relay(c_db, message)
-                ### jika ip address dan port yang sama sudah terdaftar maka tidak boleh menjadi relay
                 if(not username_relay):
                     obj_error = {
                         "error_msg": True,
@@ -351,12 +344,9 @@ while True:
                     "username": username_relay
                 }
                 # Mengirimkan semua data komponen kepada relay yang baru terkoneksi
-                # print(f"KONFIGURASI RELAY {objek}")
                 send_message(connection, objek)
             # Mendapatkan tipe dari komponen yang terhubung
             tipe = message.get('type')
-            # Membuat layanan eksklusif untuk menerima packet pesan dari komponen terkoneksi
-            # lockThread = threading.Lock()
             threading.Thread(target=handle_component, args=(connection, tipe, username_relay), daemon=True).start()
             print("===================================================")
     except KeyboardInterrupt as e:

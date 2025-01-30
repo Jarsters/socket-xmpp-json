@@ -6,7 +6,6 @@ from tracker_utils.import_abs_path import import_outside_utils
 from tracker_utils.packet import get_message, send_message
 
 from database.component import delete_component_by_id, delete_components, get_all, get_components, save_component_to_db
-# from tracker_utils.get_time import get_timestamp
 try:
     module_socket = import_outside_utils("utils\\kelas\\", "socketServer.py")
 except:
@@ -41,7 +40,6 @@ def handleComponent(communicate:socket.socket, msg, id_component):
             for msg in messages:
                 message = json.loads(msg)
                 if(message.get("message") and message.get("message").lower() == "get components"):
-                    # send_message(communicate, get_components())
                     send_connected_components_to_component(communicate)
                 elif(message.get("error_msg")):
                     print(f"Terjadi putus koneksi dengan id_component {id_component}")
@@ -83,6 +81,7 @@ while True:
         if(not ip_is_private or tipe == 'manager' or tipe == 'relay'):
             data = list(message.values())
             id_component = save_component_to_db(data, get_timestamp)
+            print(f"ID COMPONENT: {id_component}")
         print(f"Daftar koneksi dalam sistem {get_all()}\r\n")
         send_connected_components_to_component(connection)
         threading.Thread(target=handleComponent, args=(connection, message, id_component), daemon=True).start()

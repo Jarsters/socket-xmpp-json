@@ -70,6 +70,7 @@ def set_to_rosters(username, item):
         item["subscription"] = "both"
         tmp_item_jid["subscription"] = "both"
     if(updating == 2 or new):
+        print(f"New: {new}")
         # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari user's roster
         helper_set_rosters(username, item, updating)
         # Memanggil fungsionalitas untuk menyimpan atau mengubah roster item dari roster item's roster dengan roster itemnya adalah user pengirim
