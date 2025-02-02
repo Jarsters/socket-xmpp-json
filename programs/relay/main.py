@@ -33,7 +33,7 @@ IP_TRACKER = os.getenv("IP_TRACKER")
 
 # Fungsionalitas terhubung ke tracker
 def connect_to_tracker():
-    ask = input("Local (y/n)?")
+    # ask = input("Local (y/n)?")
     # if(ask.lower() == 'y'):
     #     client_tracker = SocketClientRelay(None, 5000, tipe="Tracker")
     # else:
