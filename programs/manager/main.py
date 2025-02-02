@@ -5,6 +5,7 @@ from random import randint
 import ipaddress
 import dotenv
 import os
+from time import sleep
 
 from manager_utils.presence import get_presence_by_jid, init_presence, logout, send_presence_to_someone, set_my_bio
 from manager_utils.roster import delete_roster, get_packet_subscribed_for_init_entity, get_packet_unsubscribed_for_init_entity, get_rosters, set_roster
@@ -41,11 +42,11 @@ dotenv.load_dotenv()
 IP_TRACKER = os.getenv("IP_TRACKER")
 
 def connect_to_tracker():
-    # ask = input("Local (y/n)?")
-    # if(ask.lower() == 'y'):
-    #     client_tracker = SocketClientManager(None, 5000, tipe="Tracker")
-    # else:
-    client_tracker = SocketClientManager(IP_TRACKER, 5000, tipe="Tracker")
+    ask = input("Local (y/n)?")
+    if(ask.lower() == 'y'):
+        client_tracker = SocketClientManager(None, 5000, tipe="Tracker")
+    else:
+        client_tracker = SocketClientManager(IP_TRACKER, 5000, tipe="Tracker")
     # ct = Client Tracker
     ct = client_tracker.socket
     my_ip = client_tracker.localAddress
@@ -62,6 +63,11 @@ def connect_to_tracker():
     message = get_message_tracker(ct)
     print(message)
     return ct, my_ip
+
+def tik_tak(connection):
+    while True:
+        sleep(15)
+        send_message(connection, {"msg": "/.,./.d./.,./"})
 
 def get_all_components(components):
     return convert_components_db(components)
@@ -98,8 +104,11 @@ def handle_component(communicate, tipe, username_relay):
                 messages = get_message_client(communicate)
             for msg in messages:
                 with lockThread:
-                    print("Dibawah lockThread")
                     message = json.loads(msg)
+                    if(message.get("msg") == '/.,./.d./.,./'):
+                        # print("masuk")
+                        continue
+                    print("Dibawah lockThread")
                     # if(message.get("message") != "ecir"):
                     print(message)
                     if(message.get("error_msg")):
@@ -307,6 +316,7 @@ def config_new_relay(msg, uname):
     save_component_to_db(list(msg.values()), get_timestamp)
 
 ct, my_address = connect_to_tracker()
+threading.Thread(target=tik_tak, args=(ct, ), daemon=True).start()
 m = SocketServer(my_address[1])
 manager = m.socket
 

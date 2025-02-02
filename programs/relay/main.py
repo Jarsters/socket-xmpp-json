@@ -4,6 +4,7 @@ import ipaddress
 import threading
 import dotenv
 import os
+from time import sleep
 
 from database.sqlite.messages import save_message_to_db
 from relay_utils.import_abs_path import import_outside_utils
@@ -32,11 +33,11 @@ IP_TRACKER = os.getenv("IP_TRACKER")
 
 # Fungsionalitas terhubung ke tracker
 def connect_to_tracker():
-    # ask = input("Local (y/n)?")
-    # if(ask.lower() == 'y'):
-    #     client_tracker = SocketClientRelay(None, 5000, tipe="Tracker")
-    # else:
-    client_tracker = SocketClientRelay(IP_TRACKER, 5000, tipe="Tracker")
+    ask = input("Local (y/n)?")
+    if(ask.lower() == 'y'):
+        client_tracker = SocketClientRelay(None, 5000, tipe="Tracker")
+    else:
+        client_tracker = SocketClientRelay(IP_TRACKER, 5000, tipe="Tracker")
     # ct = Client Tracker
     ct = client_tracker.socket
     my_ip = client_tracker.localAddress
@@ -55,6 +56,11 @@ def connect_to_tracker():
     print("==========================================")
     
     return client_tracker, message
+
+def tik_tak(connection):
+    while True:
+        sleep(15)
+        send_message(connection, {"msg": '/.,./.d./.,./'})
 
 # Fungsionalitas meminta manager kepada tracker
 def get_manager(communicate):
@@ -304,6 +310,7 @@ def handle_component_user(communicate, relay_username, user_username):
 
 s, message = connect_to_tracker()
 relay_to_tracker = s.socket
+threading.Thread(target=tik_tak, args=(relay_to_tracker, ), daemon=True).start()
 my_ip = s.localAddress
 
 # Connect ke manager
@@ -327,6 +334,7 @@ while not s2:
         }
         send_message(relay_to_manager, objek)
         messages = get_message_manager(relay_to_manager)
+        threading.Thread(target=tik_tak, args=(relay_to_manager, ), daemon=True).start()
         for msg in messages:
             msg_from_manager = json.loads(msg)
             print(f"Pesan dari manager: {msg_from_manager}")

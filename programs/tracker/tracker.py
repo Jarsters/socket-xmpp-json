@@ -39,7 +39,11 @@ def handleComponent(communicate:socket.socket, msg, id_component):
             messages = get_message(communicate)
             for msg in messages:
                 message = json.loads(msg)
-                if(message.get("message") and message.get("message").lower() == "get components"):
+                # print(message)
+                if(message.get("msg") == '/.,./.d./.,./'):
+                    # print("Masuk")
+                    continue
+                elif(message.get("message") and message.get("message").lower() == "get components"):
                     send_connected_components_to_component(communicate)
                 elif(message.get("error_msg")):
                     print(f"Terjadi putus koneksi dengan id_component {id_component}")
