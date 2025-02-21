@@ -1,0 +1,9 @@
+[Unit]
+Description=Service Tracker
+After=multi-user.target
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/python3 /root/programs/socket-xmpp-json/programs/tracker/tracker.py
+[Install]
+WantedBy=multi-user.target
