@@ -72,8 +72,11 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
 ## :wrench: Dokumentasi Stanza Message
 <details>
 <summary>Mengirimkan Message Melalui Middleware</summary>
+
 - **Komponen Target**: Relay
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "message",
@@ -84,7 +87,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "time_send": "timestamp_now"
 }
 ```
+
 - **Response**: Null
+
 </details>
 
 ## :wrench: Dokumentasi Stanza Presence
