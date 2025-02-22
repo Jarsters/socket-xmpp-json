@@ -28,7 +28,7 @@ def get_message_manager(communicate):
     message = communicate.recv(65536)
     message = message.decode()
     items = message.split('\x80\x81\x82')
-    # print(f"MESSAGE DARI MANAGER: {message}")
+    print(f"MESSAGE DARI MANAGER: {message}")
     if(len(items) == 1 and not items[0]):
         yield '{"error_msg": true, "tipe": "socket peer is closed"}'
     else:
@@ -48,6 +48,7 @@ def get_message_relay(communicate):
     message = communicate.recv(65536)
     message = message.decode()
     items = message.split('\x80\x81\x82')
+    print(f"MESSAGE DARI RELAY: {message}")
     if(len(items) == 1 and not items[0]):
         yield '{"error_msg": true, "tipe": "socket peer is closed"}'
     else:

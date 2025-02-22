@@ -84,7 +84,7 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "time_send": "timestamp_now"
 }
 ```
-<!-- - **Response** -->
+- **Response**: Null
 </details>
 
 ## :wrench: Dokumentasi Stanza Presence
@@ -97,7 +97,7 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "stanza": "presence"
 }
 ```
-<!-- - **Response** -->
+- **Response**: Null
 </details>
 <details>
 <summary>Mendapatkan Directed Presence</summary>
@@ -109,7 +109,19 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "to": "user_target"
 }
 ```
-<!-- - **Response** -->
+- **Response**:
+```json
+{
+  "stanza": "presence",
+  "from": "user_target",
+  "username": "user_target",
+  "bio": "bio_user_target",
+  "online": "status_user_target",
+  "updated_at": "last_update_user_target",
+  "directed_entity": true,
+  "to": "user_initiator"
+}
+```
 </details>
 <details>
 <summary>Update Bio pada Middleware</summary>
@@ -121,7 +133,18 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "bio": "value_of_bio"
 }
 ```
-<!-- - **Response** -->
+- **Response**: 
+```json
+{
+  "stanza": "presence",
+  "from": "user_initiator",
+  "username": "user_initiator",
+  "bio": "new_bio_user_initiator",
+  "online": "status_user_initiator",
+  "updated_at": "last_update_user_initiator",
+  "to": "user"
+}
+```
 </details>
 <details>
 <summary>Logout dari Sistem</summary>
@@ -133,7 +156,15 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "type": "unavailable"
 }
 ```
-<!-- - **Response** -->
+- **Response**:
+```json
+{
+  "stanza": "presence",
+  "from": "user_initiator",
+  "type": "unavailable",
+  "to": "user"
+}
+```
 </details>
 
 ## :wrench: Dokumentasi Stanza IQ (Info/Query)
@@ -156,7 +187,41 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     }
 }
 ```
-<!-- - **Response** -->
+- **Response 1**:
+``` json
+{
+  "stanza": "presence",
+  "from": "user_target",
+  "to": "user_initiator",
+  "type": "subscribed",
+  "item": {
+    "jid": "user_target",
+    "name": "alias_name_for_user_target",
+    "subscription": "to"
+  }
+}
+```
+- **Response 2**:
+``` json
+{
+  "stanza": "presence",
+  "from": "user_target",
+  "username": "user_target",
+  "bio": "bio_user_target",
+  "online": "status_user_target",
+  "updated_at": "last_updated_user_target",
+  "to": "user_initiator"
+}
+```
+- **Response 3**:
+``` json
+{
+  "stanza": "iq",
+  "namespace": "roster",
+  "type": "result",
+  "to": "user_initiator"
+}
+```
 </details>
 <details>
 <summary>Mendapatkan Daftar Roster (Contact)</summary>
@@ -171,7 +236,24 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "query": {"items": null}
 }
 ```
-<!-- - **Response** -->
+- **Response**:
+``` json
+{
+  "stanza": "iq",
+  "namespace": "roster",
+  "type": "result",
+  "query": {
+    "items": [
+      {
+        "jid": "roster_1",
+        "name": "alias_name_roster_1",
+        "subscription": "type_subscribe between them"
+      }
+    ]
+  },
+  "to": "user_initiator"
+}
+```
 </details>
 <details>
 <summary>Memperbarui Nickname dari Roster (Contact)</summary>
@@ -186,13 +268,47 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "query": {
         "item": {
             "jid": "user_target",
-            "name": "new_nickname_user_target",
+            "name": "alias_name_for_user_target",
             "subscription": "to"
         }
     }
 }
 ```
-<!-- - **Response** -->
+- **Response 1**:
+``` json
+{
+  "stanza": "presence",
+  "from": "user_target",
+  "to": "user_initiator",
+  "type": "subscribed",
+  "item": {
+    "jid": "user_target",
+    "name": "alias_new_name_for_user_target",
+    "subscription": "to"
+  }
+}
+```
+- **Response 2**:
+``` json
+{
+  "stanza": "presence",
+  "from": "user_target",
+  "username": "user_target",
+  "bio": "bio_user_target",
+  "online": "status_user_target",
+  "updated_at": "last_updated_user_target",
+  "to": "user_initiator"
+}
+```
+- **Response 3**:
+``` json
+{
+  "stanza": "iq",
+  "namespace": "roster",
+  "type": "result",
+  "to": "user_initiator"
+}
+```
 </details>
 <details>
 <summary>Menghapus Roster (Contact)</summary>
@@ -214,7 +330,25 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "subscription": "remove"
 }
 ```
-<!-- - **Response** -->
+- **Response 1**:
+```json
+{
+  "stanza": "presence",
+  "from": "user_target",
+  "to": "user_initiator",
+  "type": "unsubscribed"
+}
+```
+- **Response 2**:
+```json
+{
+  "stanza": "iq",
+  "namespace": "roster",
+  "type": "result",
+  "subscription": "remove",
+  "to": "user_initiator"
+}
+```
 </details>
 
 ## :file_folder: Struktur Direktori & File
@@ -269,61 +403,56 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     │   |   ├── main.py                                                 # File utama untuk menjalankan relay
     │   |   ├── .env                                                    # Environment komponen relay
     │   |   └── socketClient.py                                         # Kemampuan relay untuk menjadi klien
-<!--|   |
-    │   ├── tracker                                                     # Folder untuk kodingan crawling
+    |   |
+    │   ├── tracker                                                     # Folder untuk komponen tracker
     |   |   |
-    │   |   ├── database                                                # Folder tentang basis datanya komponen manager
+    │   |   ├── database                                                # Folder tentang basis datanya komponen tracker
     |   |   |   |   
-    |   |   |   ├── component.py                                        # Menyimpan data dalam bentuk SQLite
-    |   |   |   └── init_db.py                                          # Menyimpan daftar socket komponen terkoneksi pada manager
+    |   |   |   ├── component.py                                        # Menyimpan data komponen dalam bentuk SQLite
+    |   |   |   └── init_db.py                                          # File berisi object database SQLite tracker
     |   |   |   
-    │   |   ├── tracker_utils                                           # Berisi utilitas/fungsionalitas komponen manager
+    │   |   ├── tracker_utils                                           # Berisi utilitas/fungsionalitas komponen tracker
     |   |   |   ├── get_time.py                                         # Kemampuan untuk mengelola timestamp
     |   |   |   ├── import_abs_path.py                                  # Kemampuan untuk meng-import utilitas umum yang berada pada folder utils
     |   |   |   └── packet.py                                           # Kemampuan untuk menerima packet pesan dari komponen lainnya
     |   |   |
-    │   |   └── tracker.py                                              # Fungsi-fungsi pendukung crawling
+    │   |   └── tracker.py                                              # File utama untuk menjalankan tracker
     |   |
-    │   ├── user                                                        # Folder untuk kodingan crawling
+    │   ├── user                                                        # Folder untuk komponen aplikasi user penguji
     |   |   |
-    │   |   ├── database                                                # Folder tentang basis datanya komponen manager
-    |   |   |   |   
-    |   |   |   ├── dummy                                               # Menyimpan data dalam bentuk SQLite
-    |   |   |   |   └── init.py                                         # File berisi object database SQLite manager
-    |   |   |   | 
-    |   |   |   └── init.py                                             # Menyimpan daftar socket komponen terkoneksi pada manager
+    │   |   ├── database                                                # Folder tentang basis datanya komponen user
+    |   |   |   └── init.py                                             # Menyimpan data kebutuhan dasar aplikasi user
     |   |   |   
-    │   |   ├── user_utils                                              # Berisi utilitas/fungsionalitas komponen manager
-    |   |   |   ├── communicate_with_another_component.py               # Kemampuan untuk meng-import utilitas umum yang berada pada folder utils
+    │   |   ├── user_utils                                              # Berisi utilitas/fungsionalitas komponen aplikasi user
+    |   |   |   ├── communicate_with_another_component.py               # Kemampuan untuk menerima pesan dari komponen relay atau manager, dan melakukan pengolahan pesan
     |   |   |   ├── get_time.py                                         # Kemampuan untuk mengelola timestamp
-    |   |   |   ├── message.py                                          # Kemampuan untuk meng-import utilitas umum yang berada pada folder utils
+    |   |   |   ├── message.py                                          # Kemampuan untuk melakukan pengiriman stanza message kepada komponen relay
     |   |   |   ├── packet.py                                           # Kemampuan untuk menerima packet pesan dari komponen lainnya
-    |   |   |   ├── presence.py                                         # Kemampuan untuk meng-import utilitas umum yang berada pada folder utils
-    |   |   |   └── roster.py                                           # Kemampuan untuk meng-import utilitas umum yang berada pada folder utils
+    |   |   |   ├── presence.py                                         # Kemampuan untuk pengelolaan kegiatan yang berkaitan stanza presence
+    |   |   |   └── roster.py                                           # Kemampuan untuk pengelolaan kegiatan yang berkaitan stanza iq, namespace "roster"
     |   |   |
-    │   |   ├── main.py                                                 # File utama untuk menjalankan manager
+    │   |   ├── main.py                                                 # File utama untuk menjalankan aplikasi user
     │   |   ├── .env                                                    # Environment komponen manager
-    │   |   └── socketClient.py                                         # Fungsi-fungsi pendukung crawling
+    │   |   └── socketClient.py                                         # Kemampuan aplikasi user untuk menjadi klien
     |   |
-    │   ├── user bot joker node js                                      # Folder untuk kodingan document ranking
-    │   |   ├── client.js                                               # File utama untuk menjalankan manager
-    │   |   ├── kumpulan_quotes.js                                      # File utama untuk menjalankan manager
-    │   |   ├── package.json                                            # File utama untuk menjalankan manager
-    │   |   └── package-lock.json                                       # Implementasi dari TF-IDF
+    │   ├── user bot joker node js                                      # Folder untuk komponen aplikasi user bot
+    │   |   ├── client.js                                               # File utama untuk menjalankan aplikasi user bot
+    │   |   ├── kumpulan_quotes.js                                      # File kumpulan quotes yang akan digunakan pada aplikasi user bot
+    │   |   ├── package.json                                            # File JSON yang berisi catatan deskripsi aplikasi
+    │   |   └── package-lock.json                                       # File JSON yang berisi catatan package yang dipakai pada aplikasi user bot
     |   |
-    │   └── utils                                                       # Folder untuk kodingan crawling
+    │   └── utils                                                       # Folder untuk fungsionalitas umum yang dapat digunakan oleh komponen tracker, manager, dan relay.
     |       |
-    │       ├── kelas                                                   # Folder tentang basis datanya komponen manager
+    │       ├── kelas                                                   # Folder fungsionalitas dalam bentuk Class
     |       |   |   
-    |       |   └── socketServer.py                                     # Menyimpan data dalam bentuk SQLite
+    |       |   └── socketServer.py                                     # Kemampuan untuk menjadikan komponen pengguna menjadi server
     |       |
-    │       └── utility                                                 # Folder tentang basis datanya komponen manager
+    │       └── utility                                                 # Folder fungsionalitas dalam bentuk fungsi biasa
     |           |   
-    |           ├── get_time.py                                         # Kemampuan untuk menerima packet pesan dari komponen lainnya
-    |           └── testing_import_from_another_folder_in_top_root.py   # Menyimpan data dalam bentuk SQLite
-    | -->
+    |           └── get_time.py                                         # Kemampuan untuk menjadikan komponen mampu mengolah timestamp\
+    |
     ├── README.md                                                       # File README
-    └── requirements.txt                                                # Berisi list library yang diperlukan
+    └── requirements.txt                                                # Berisi list library yang diperlukan untuk program python
 
 ## :page_facing_up: Referensi
 
