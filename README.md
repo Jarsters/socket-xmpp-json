@@ -95,26 +95,35 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
 ## :wrench: Dokumentasi Stanza Presence
 <details>
 <summary>Inisialisasi Presence</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "presence"
 }
 ```
+
 - **Response**: Null
 </details>
 <details>
 <summary>Mendapatkan Directed Presence</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "presence",
     "to": "user_target"
 }
 ```
+
 - **Response**:
+
 ```json
 {
   "stanza": "presence",
@@ -127,18 +136,24 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user_initiator"
 }
 ```
+
 </details>
 <details>
 <summary>Update Bio pada Middleware</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "presence",
     "bio": "value_of_bio"
 }
 ```
+
 - **Response**: 
+
 ```json
 {
   "stanza": "presence",
@@ -150,18 +165,24 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user"
 }
 ```
+
 </details>
 <details>
 <summary>Logout dari Sistem</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "presence",
     "type": "unavailable"
 }
 ```
+
 - **Response**:
+
 ```json
 {
   "stanza": "presence",
@@ -170,13 +191,17 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user"
 }
 ```
+
 </details>
 
 ## :wrench: Dokumentasi Stanza IQ (Info/Query)
 <details>
 <summary>Menambahkan Roster (Contact)</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "iq",
@@ -192,7 +217,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     }
 }
 ```
+
 - **Response 1**:
+
 ``` json
 {
   "stanza": "presence",
@@ -206,7 +233,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   }
 }
 ```
+
 - **Response 2**:
+
 ``` json
 {
   "stanza": "presence",
@@ -218,7 +247,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user_initiator"
 }
 ```
+
 - **Response 3**:
+
 ``` json
 {
   "stanza": "iq",
@@ -227,11 +258,15 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user_initiator"
 }
 ```
+
 </details>
 <details>
 <summary>Mendapatkan Daftar Roster (Contact)</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "iq",
@@ -241,7 +276,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "query": {"items": null}
 }
 ```
+
 - **Response**:
+
 ``` json
 {
   "stanza": "iq",
@@ -259,11 +296,15 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user_initiator"
 }
 ```
+
 </details>
 <details>
 <summary>Memperbarui Nickname dari Roster (Contact)</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "iq",
@@ -279,7 +320,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     }
 }
 ```
+
 - **Response 1**:
+
 ``` json
 {
   "stanza": "presence",
@@ -293,7 +336,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   }
 }
 ```
+
 - **Response 2**:
+
 ``` json
 {
   "stanza": "presence",
@@ -305,7 +350,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user_initiator"
 }
 ```
+
 - **Response 3**:
+
 ``` json
 {
   "stanza": "iq",
@@ -317,8 +364,11 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
 </details>
 <details>
 <summary>Menghapus Roster (Contact)</summary>
+
 - **Komponen Target**: Manager
+
 - **Payload/Stanza**:
+
 ```json
 {
     "stanza": "iq", 
@@ -335,7 +385,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
     "subscription": "remove"
 }
 ```
+
 - **Response 1**:
+
 ```json
 {
   "stanza": "presence",
@@ -344,7 +396,9 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "type": "unsubscribed"
 }
 ```
+
 - **Response 2**:
+
 ```json
 {
   "stanza": "iq",
@@ -354,6 +408,7 @@ Tersedia juga aplikasi untuk mencoba middlewarenya, yang tersimpan dalam folder 
   "to": "user_initiator"
 }
 ```
+
 </details>
 
 ## :file_folder: Struktur Direktori & File
